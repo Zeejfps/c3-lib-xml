@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<library>
+    <book id="1">
+        <title>1984</title>
+        <author>George Orwell</author>
+        <genre>Dystopian</genre>
+        <published>1949</published>
+    </book>
+    <book id="2">
+        <title>To Kill a Mockingbird</title>
+        <author>Harper Lee</author>
+        <genre>Fiction</genre>
+        <published>1960</published>
+    </book>
+    <book id="3">
+        <title>The Great Gatsby</title>
+        <author>F. Scott Fitzgerald</author>
+        <genre>Tragedy</genre>
+        <published>1925</published>
+    </book>
+    <magazine id="1">
+        <title>National Geographic</title>
+        <issue>July 2024</issue>
+        <topic>Science and Nature</topic>
+    </magazine>
+    <newspaper id="1">
+        <title>The New York Times</title>
+        <date>2024-07-28</date>
+        <headline>Global Warming and Its Impact</headline>
+    </newspaper>
+</library>
