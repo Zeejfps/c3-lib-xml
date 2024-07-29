@@ -24,5 +24,7 @@ fn int main(String[] args)
 		io::printf("%s\n", child.name);
 	}
 
+	io::print("Done!\n");
+
 	return 0;
 }

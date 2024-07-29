@@ -27,8 +27,8 @@ struct XmlParser {
 	XmlParserState state;
 	usz readHead;
 	usz writeHead;
-	char[] buffer;
     XmlRoot* root;
+    char[] buffer;
 }
 
 fn XmlParser* new() {
@@ -42,12 +42,13 @@ fn XmlParser* new() {
 
 fn void free(XmlParser* xmlParser) {
     mem::free(xmlParser.buffer);
-    mem::free(xmlParser);
     for (usz i = 0; i < xmlParser.root.children.count; i++) {
         XmlNode* child = xmlParser.root.children.nodes[i];
         mem::free(child);
     }
+    mem::free(xmlParser.root.children.nodes);
     mem::free(xmlParser.root);
+    mem::free(xmlParser);
 }
 
 fn void XmlParser.update(XmlParser* this, char[] slice) {
@@ -112,13 +113,12 @@ fn void XmlParser.readCloseBrace(XmlParser* this, char[] slice) {
 		this.state = XmlParserState.READ_UNTIL_OPEN_BRACE;
 
         XmlNode* child =  mem::new(XmlNode);
-        usz tagNameLength = this.writeHead + 1;
+        usz tagNameLength = this.writeHead;
         child.name = mem::new_array(char, tagNameLength);
         mem::copy(child.name, this.buffer, tagNameLength);
 
         usz newChildIndex = this.root.children.count;
-        this.root.children.nodes[newChildIndex] = child;
-        this.root.children.count++;
+        this.root.children.add(child);
 
 		// char[] tagName = this.buffer[0:this.writeHead];
 		this.writeHead = 0;
@@ -134,4 +134,10 @@ fn void XmlParser.readHeader(XmlParser* this, char[] slice) {
 	if (c == '>') {
 		this.state = XmlParserState.READ_UNTIL_OPEN_BRACE;
 	}
+}
+
+fn void XmlNodeChildren.add(XmlNodeChildren* this, XmlNode* child) {
+    usz index = this.count;
+    this.nodes[index] = child;
+    this.count = index + 1;
 }
