@@ -30,14 +30,14 @@ struct XmlNode {
 
 enum XmlParserState {
 	READ_UNTIL_OPEN_BRACE,
-	PARSE_NODE_NAME,
-	PARSE_TAG,
-	PARSE_HEADER,
+    PARSE_HEADER,
+    PARSE_TAG,
+	PARSE_TAG_NAME,
+    PARSE_TAG_VALUE,
     PARSE_CLOSING_TAG,
     PARSE_ATTRIBUTE_NAME,
     PARSE_ATTRIBUTE_VALUE,
     PARSE_ATTRIBUTE_VALUE_INNER,
-    PARSE_NODE_VALUE,
 }
 
 struct XmlParser {
@@ -85,7 +85,7 @@ fn void XmlParser.update(&self, char[] slice) {
 			case READ_UNTIL_OPEN_BRACE:
 				self.readUntilOpenBrace(c);
 				break;
-			case PARSE_NODE_NAME:
+			case PARSE_TAG_NAME:
 				self.parseNodeName(c);
 				break;
 			case PARSE_TAG:
@@ -103,14 +103,14 @@ fn void XmlParser.update(&self, char[] slice) {
             case PARSE_ATTRIBUTE_VALUE_INNER:
                 self.parseAttributeValueInner(c);
                 break;
-            case PARSE_NODE_VALUE:
+            case PARSE_TAG_VALUE:
                 self.parseNodeValue(c);
                 break;
 		}
 	}
 }
 
-fn char! XmlParser.readChar(XmlParser* this, char[] slice) {
+fn char! XmlParser.readChar(XmlParser* this, char[] slice) @private {
 	usz readHead = this.readHead;
 	if (readHead >= slice.len){
 		return IoError.EOF?;
@@ -120,19 +120,19 @@ fn char! XmlParser.readChar(XmlParser* this, char[] slice) {
 	return c;
 }	
 
-fn void XmlParser.writeChar(XmlParser* this, char c) {
+fn void XmlParser.writeChar(XmlParser* this, char c) @private {
 	usz writeHead = this.writeHead;
 	this.buffer[writeHead] = c;
 	this.writeHead = writeHead + 1;
 }	
 
-fn void XmlParser.readUntilOpenBrace(XmlParser* this, char c) {
+fn void XmlParser.readUntilOpenBrace(XmlParser* this, char c) @private {
 	if (c == '<') {
 		this.state = XmlParserState.PARSE_TAG;
 	}
 }
 
-fn void XmlParser.parseTag(XmlParser* this, char c) {
+fn void XmlParser.parseTag(XmlParser* this, char c) @private {
 	if (c == '/') {
 		// signify its a closing tag
         this.writeHead = 0;
@@ -154,7 +154,7 @@ fn void XmlParser.parseTag(XmlParser* this, char c) {
         this.stackHead += 1;
         this.nodeStack[this.stackHead] = child;
 
-        this.state = XmlParserState.PARSE_NODE_NAME;
+        this.state = XmlParserState.PARSE_TAG_NAME;
 	}
 }
 
@@ -168,7 +168,7 @@ fn void XmlParser.parseNodeName(XmlParser* this, char c) {
 		this.writeHead = 0;
 
         if (c == '>') {
-            this.state = XmlParserState.PARSE_NODE_VALUE;
+            this.state = XmlParserState.PARSE_TAG_VALUE;
         } else if (c == ' ') {
             this.state = XmlParserState.PARSE_ATTRIBUTE_NAME;
         }
@@ -179,7 +179,7 @@ fn void XmlParser.parseNodeName(XmlParser* this, char c) {
 
 fn void XmlParser.parseClosingTag(XmlParser* this, char c) {
 	if (c == '>') {
-		this.state = XmlParserState.PARSE_NODE_VALUE;
+		this.state = XmlParserState.PARSE_TAG_VALUE;
         
         usz tagNameLength = this.writeHead;
         XmlNode* child = this.nodeStack[this.stackHead];
@@ -200,7 +200,7 @@ fn void XmlParser.parseClosingTag(XmlParser* this, char c) {
 fn void XmlParser.parseAttributeName(&self, char c) {
     if (c == '>') {
         io::print("Encountered closing brace before parsing attribute value?!\n");
-        self.state = XmlParserState.PARSE_NODE_VALUE;
+        self.state = XmlParserState.PARSE_TAG_VALUE;
     } else if (c == ' ') {
         // Skip space
     } else if (c == '=') {
