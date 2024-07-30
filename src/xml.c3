@@ -170,10 +170,8 @@ fn void XmlParser.parseTag(&self, char c) @private {
 
 fn void XmlParser.parseTagName(&self, char c) @private {
 	if (c == '>' || c == ' ') {
-        usz tagNameLength = self.writeHead;
         XmlNode* child = self.peek_node();
-        child.name = mem::new_array(char, tagNameLength);
-        mem::copy(child.name, self.buffer, tagNameLength);
+        child.name = self.copy_write_buffer();
         io::printf("%s\n", child.name);
 		self.writeHead = 0;
 
