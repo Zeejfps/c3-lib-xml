@@ -30,8 +30,8 @@ struct XmlNode {
 
 enum XmlParserState {
 	READ_UNTIL_OPEN_BRACE,
-	PARSE_TAG_NAME,
-	DETECT_CLOSING_TAG,
+	PARSE_NODE_NAME,
+	PARSE_TAG,
 	PARSE_HEADER,
     PARSE_CLOSING_TAG,
     PARSE_ATTRIBUTE_NAME,
@@ -84,10 +84,10 @@ fn void XmlParser.update(XmlParser* this, char[] slice) {
 			case READ_UNTIL_OPEN_BRACE:
 				this.readUntilOpenBrace(slice);
 				break;
-			case PARSE_TAG_NAME:
-				this.parseTagName(slice);
+			case PARSE_NODE_NAME:
+				this.parseNodeName(slice);
 				break;
-			case DETECT_CLOSING_TAG:
+			case PARSE_TAG:
 				this.detectClosingTag(slice);
 				break;
             case PARSE_CLOSING_TAG:
@@ -128,7 +128,7 @@ fn void XmlParser.writeChar(XmlParser* this, char c) {
 fn void XmlParser.readUntilOpenBrace(XmlParser* this, char[] slice) {
 	char c = this.readChar(slice)!!;
 	if (c == '<') {
-		this.state = XmlParserState.DETECT_CLOSING_TAG;
+		this.state = XmlParserState.PARSE_TAG;
 	}
 }
 
@@ -145,7 +145,7 @@ fn void XmlParser.detectClosingTag(XmlParser* this, char[] slice) {
         io::print("Pushing node: ");
         this.writeHead = 0;
 		this.writeChar(c);
-		this.state = XmlParserState.PARSE_TAG_NAME;
+		this.state = XmlParserState.PARSE_NODE_NAME;
 
         XmlNode* child = mem::new(XmlNode);
         if (this.stackHead < 0) {
@@ -159,7 +159,7 @@ fn void XmlParser.detectClosingTag(XmlParser* this, char[] slice) {
 	}
 }
 
-fn void XmlParser.parseTagName(XmlParser* this, char[] slice) {
+fn void XmlParser.parseNodeName(XmlParser* this, char[] slice) {
 	char c = this.readChar(slice)!!;
 	if (c == '>' || c == ' ') {
         usz tagNameLength = this.writeHead;
@@ -255,7 +255,7 @@ fn void XmlParser.parseNodeValue(&self, char[] slice) {
         // String s;
         // s.trim(" ");
         io::printf("Inner Text: %s\n", trimmedInnerText);
-		self.state = XmlParserState.DETECT_CLOSING_TAG;
+		self.state = XmlParserState.PARSE_TAG;
 	} else {
         self.writeChar(c);
     } 
