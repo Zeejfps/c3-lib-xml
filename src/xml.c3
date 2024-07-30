@@ -11,17 +11,29 @@ struct XmlRoot {
     XmlNodeChildren children; 
 }
 
+struct XmlAttribute {
+    char[] name;
+    char[] value;
+}
+
+struct XmlAttributes {
+    XmlAttribute** attributes;
+    usz count;
+}
+
 struct XmlNode {
     char[] name;
+    XmlAttributes attributes;
     XmlNodeChildren children;
 }
 
 enum XmlParserState {
 	READ_UNTIL_OPEN_BRACE,
-	READ_UNTIL_CLOSE_BRACE,
+	PARSE_TAG_NAME,
 	DETECT_CLOSING_TAG,
 	PARSE_HEADER,
     PARSE_CLOSING_TAG,
+    PARSE_ATTRIBUTE,
 }
 
 struct XmlParser {
@@ -70,14 +82,17 @@ fn void XmlParser.update(XmlParser* this, char[] slice) {
 			case READ_UNTIL_OPEN_BRACE:
 				this.readUntilOpenBrace(slice);
 				break;
-			case READ_UNTIL_CLOSE_BRACE:
-				this.readCloseBrace(slice);
+			case PARSE_TAG_NAME:
+				this.parseTagName(slice);
 				break;
 			case DETECT_CLOSING_TAG:
 				this.detectClosingTag(slice);
 				break;
             case PARSE_CLOSING_TAG:
                 this.parseClosingTag(slice);
+                break;
+            case PARSE_ATTRIBUTE:
+                this.parseAttribute(slice);
                 break;
 		}
 	}
@@ -119,7 +134,7 @@ fn void XmlParser.detectClosingTag(XmlParser* this, char[] slice) {
         io::print("Pushing node: ");
         this.writeHead = 0;
 		this.writeChar(c);
-		this.state = XmlParserState.READ_UNTIL_CLOSE_BRACE;
+		this.state = XmlParserState.PARSE_TAG_NAME;
 
         XmlNode* child = mem::new(XmlNode);
         child.children.nodes = mem::new_array(XmlNode*, 10);
@@ -135,18 +150,21 @@ fn void XmlParser.detectClosingTag(XmlParser* this, char[] slice) {
 	}
 }
 
-fn void XmlParser.readCloseBrace(XmlParser* this, char[] slice) {
+fn void XmlParser.parseTagName(XmlParser* this, char[] slice) {
 	char c = this.readChar(slice)!!;
-	if (c == '>') {
-		this.state = XmlParserState.READ_UNTIL_OPEN_BRACE;
-        
+	if (c == '>' || c == ' ') {
         usz tagNameLength = this.writeHead;
         XmlNode* child = this.nodeStack[this.stackHead];
         child.name = mem::new_array(char, tagNameLength);
         mem::copy(child.name, this.buffer, tagNameLength);
         io::printf("%s\n", child.name);
-		// char[] tagName = this.buffer[0:this.writeHead];
 		this.writeHead = 0;
+
+        if (c == '>') {
+            this.state = XmlParserState.READ_UNTIL_OPEN_BRACE;
+        } else if (c == ' ') {
+            this.state = XmlParserState.PARSE_ATTRIBUTE;
+        }
 	} else {
 		this.writeChar(c);
 	}
@@ -171,6 +189,17 @@ fn void XmlParser.parseClosingTag(XmlParser* this, char[] slice) {
 	} else {
 		this.writeChar(c);
 	}
+}
+
+fn void XmlParser.parseAttribute(&self, char[] slice) {
+	char c = self.readChar(slice)!!;
+	if (c == '>') {
+        char[] attribute = self.buffer[0:self.writeHead];
+        io::printf("Attribute %s\n", attribute);
+		self.state = XmlParserState.READ_UNTIL_OPEN_BRACE;
+	} else {
+        self.writeChar(c);
+    }
 }
 
 fn void XmlParser.readHeader(XmlParser* this, char[] slice) {
