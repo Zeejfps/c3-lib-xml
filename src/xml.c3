@@ -1,4 +1,4 @@
-module xml;
+module env::xml;
 
 import std::core;
 import std::io;
@@ -52,7 +52,7 @@ struct XmlParser {
 }
 
 fn XmlParser* new() {
-	xml::XmlParser* xmlParser = mem::new(XmlParser);
+	XmlParser* xmlParser = mem::new(XmlParser);
 	xmlParser.buffer = mem::new_array(char, 1024);
     xmlParser.root = mem::new(XmlRoot);
     xmlParser.nodeStack = mem::new_array(XmlNode*, 10);

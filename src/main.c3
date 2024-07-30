@@ -1,6 +1,6 @@
 import std::io;
 import std::core;
-import xml;
+import env::xml;
 
 fn int main(String[] args)
 {
