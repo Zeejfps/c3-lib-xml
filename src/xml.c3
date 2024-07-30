@@ -133,7 +133,7 @@ fn void XmlParser.push_node(&self, XmlNode* node) {
     self.nodeStack[self.stackHead] = node;
 }
 
-fn void XmlParser.pop_node(&self, XmlNode* node) {
+fn void XmlParser.pop_node(&self) {
     self.stackHead -= 1;
 }
 
@@ -194,28 +194,20 @@ fn void XmlParser.parseTagName(&self, char c) @private {
 	}
 }
 
-fn void XmlParser.parseClosingTag(XmlParser* this, char c) @private {
-	if (c == '>') {        
-        usz tagNameLength = this.writeHead;
-        XmlNode* child = this.peek_node();
-        char[] tagName = this.buffer[0:tagNameLength];
-
-        if (child.name != tagName){
-            io::printf("Opening and closing tag name missmatch. Expected %s found %s\n", child.name, tagName);
-        }
-
-        this.stackHead -= 1;
-		this.writeHead = 0;
-		io::printf("Poping Node %s\n", tagName);
-
-        this.state = XmlParserState.PARSE_TAG_VALUE;
-	} else {
-		this.writeChar(c);
+fn void XmlParser.parseClosingTag(&self, char c) @private {
+	if (c == '>') {      
+        XmlNode* node = self.peek_node(); 
+        io::printf("Poping Node: %s\n", node.name); 
+        self.pop_node();
+		self.writeHead = 0;
+        self.state = XmlParserState.PARSE_TAG_VALUE;
 	}
 }
 
 fn void XmlParser.parseAttributeName(&self, char c) @private {
-    if (c == '>') {
+    if (c == '/') {
+        self.state = XmlParserState.PARSE_CLOSING_TAG;
+    } else if (c == '>') {
         io::print("Encountered closing brace before parsing attribute value?!\n");
         self.state = XmlParserState.PARSE_TAG_VALUE;
     } else if (c == ' ') {
