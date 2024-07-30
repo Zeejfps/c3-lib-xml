@@ -10,19 +10,19 @@ fn int main(String[] args)
 	char[] buff = mem::new_array(char, 1024);
 	defer mem::free(buff);
 
-	xml::XmlParser* xmlParser = xml::new();
-	defer xml::free(xmlParser);
+	xml::Reader* reader = xml::new();
+	defer xml::free(reader);
 
 	while (!xmlFile.eof()) {
 		usz bytesRead = xmlFile.read(buff)!!;
 		char[] slice = buff[0:bytesRead];
 		//io::printf("bytes read: %d\n", slice.len);
-		xmlParser.update(slice);
+		reader.update(slice);
 	}
 
-	for (usz i = 0; i < xmlParser.root.children.size; i++) {
-		XmlNode* child = xmlParser.root.children[i];
-		printNode(outFile, child, 0, i, xmlParser.root.children.size);
+	for (usz i = 0; i < reader.root.children.size; i++) {
+		XmlNode* child = reader.root.children[i];
+		printNode(outFile, child, 0, i, reader.root.children.size);
 	}
 
 	//io::print("Done!\n");
