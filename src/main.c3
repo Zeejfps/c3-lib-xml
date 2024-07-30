@@ -10,7 +10,7 @@ fn int main(String[] args)
 	char[] buff = mem::new_array(char, 1024);
 	defer mem::free(buff);
 
-	xml::Reader* reader = xml::new();
+	xml::Reader* reader = xml::new_reader();
 	defer xml::free(reader);
 
 	while (!xmlFile.eof()) {

@@ -51,7 +51,7 @@ struct Reader {
     XmlAttribute* attributeBeingParsed;
 }
 
-fn Reader* new() {
+fn Reader* new_reader() {
 	Reader* reader = mem::new(Reader);
 	reader.buffer = mem::new_array(char, 1024);
     reader.root = mem::new(XmlRoot);
