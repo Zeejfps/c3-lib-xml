@@ -28,7 +28,7 @@ enum XmlParserState {
     PARSE_HEADER,
     PARSE_TAG,
 	PARSE_TAG_NAME,
-    PARSE_TAG_VALUE,
+    READ_TEXT_NODE,
     PARSE_CLOSING_TAG,
     PARSE_ATTRIBUTE_NAME,
     PARSE_ATTRIBUTE_VALUE,
@@ -90,8 +90,8 @@ fn void XmlParser.update(&self, char[] slice) {
             case PARSE_TAG_NAME:
 				self.parseTagName(c);
 				break;
-            case PARSE_TAG_VALUE:
-                self.parseTagValue(c);
+            case READ_TEXT_NODE:
+                self.readTextNode(c);
                 break;
             case PARSE_CLOSING_TAG:
                 self.parseClosingTag(c);
@@ -199,7 +199,7 @@ fn void XmlParser.parseTagName(&self, char c) @private {
         //io::printf("%s\n", nodeBeingParsed.name);
         if (c == '>') {
             self.writeHead = 0;
-            self.state = XmlParserState.PARSE_TAG_VALUE;
+            self.state = XmlParserState.READ_TEXT_NODE;
         } else if (c == ' ') {
             self.writeHead = 0;
             self.attributeBeingParsed = mem::new(XmlAttribute);
@@ -218,8 +218,13 @@ fn void XmlParser.parseClosingTag(&self, char c) @private {
         //io::printf("Poping Node: %s\n", node.name); 
         self.pop_node();
 		self.writeHead = 0;
-        self.state = XmlParserState.PARSE_TAG_VALUE;
+        self.state = XmlParserState.READ_TEXT_NODE;
 	}
+}
+
+fn void XmlParser.enterReadTextNodeState(&self) @private {
+    self.writeHead = 0;
+    self.state = XmlParserState.READ_TEXT_NODE;
 }
 
 fn void XmlParser.parseAttributeName(&self, char c) @private {
@@ -227,7 +232,7 @@ fn void XmlParser.parseAttributeName(&self, char c) @private {
         self.state = XmlParserState.PARSE_CLOSING_TAG;
     } else if (c == '>') {
         //io::print("Encountered closing brace before parsing attribute value?!\n");
-        self.state = XmlParserState.PARSE_TAG_VALUE;
+        self.enterReadTextNodeState();
     } else if (c == ' ') {
         // Skip space
     } else if (c == '=') {
@@ -278,11 +283,17 @@ fn void XmlParser.parseHeader(XmlParser* this, char c) @private {
 	}
 }
 
-fn void XmlParser.parseTagValue(&self, char c) @private {
+fn void XmlParser.readTextNode(&self, char c) @private {
 	if (c == '<') {
-        String innerText = (String)self.buffer[0:self.writeHead];
-        String trimmedInnerText = innerText.trim();
-        //io::printf("Inner Text: %s\n", trimmedInnerText);
+        if (self.writeHead > 0) {
+            char[] textNodeValue = self.copy_write_buffer();
+            XmlNode* textNode = mem::new(XmlNode);
+            textNode.name = "text";
+            textNode.value = textNodeValue;
+            // io::printf("%s\n", textNodeValue);
+            XmlNode* nodeBeingParsed = self.peek_node();
+            nodeBeingParsed.children.push(textNode);
+        }
         self.writeHead = 0;
 		self.state = XmlParserState.PARSE_TAG;
 	} else {
