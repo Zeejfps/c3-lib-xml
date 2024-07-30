@@ -6,7 +6,7 @@ fn int main(String[] args)
 {
 	File xmlFile = io::file::open("test/test.xml", "r")!!;
 	
-	char[] buff = mem::new_array(char, 256);
+	char[] buff = mem::new_array(char, 1024);
 	defer mem::free(buff);
 
 	xml::XmlParser* xmlParser = xml::new();

@@ -53,7 +53,7 @@ struct XmlParser {
 
 fn XmlParser* new() {
 	xml::XmlParser* xmlParser = mem::new(XmlParser);
-	xmlParser.buffer = mem::new_array(char, 512);
+	xmlParser.buffer = mem::new_array(char, 1024);
     xmlParser.root = mem::new(XmlRoot);
     xmlParser.nodeStack = mem::new_array(XmlNode*, 10);
     xmlParser.stackHead = -1;
@@ -122,10 +122,13 @@ fn char! XmlParser.readChar(XmlParser* this, char[] slice) @private {
 	return c;
 }	
 
-fn void XmlParser.writeChar(XmlParser* this, char c) @private {
-	usz writeHead = this.writeHead;
-	this.buffer[writeHead] = c;
-	this.writeHead = writeHead + 1;
+fn void XmlParser.writeChar(&self, char c) @private {
+	usz writeHead = self.writeHead;
+    if (writeHead >= self.buffer.len) {
+        io::printf("%s\n", self.buffer);
+    }
+	self.buffer[writeHead] = c;
+	self.writeHead = writeHead + 1;
 }	
 
 fn void XmlParser.push_node(&self, XmlNode* node) {
@@ -173,7 +176,7 @@ fn void XmlParser.parseTag(&self, char c) @private {
 		self.state = PARSE_HEADER;
 	} else {
 
-        io::print("Pushing node: ");
+        //io::print("Pushing node: ");
         self.writeHead = 0;
 		self.writeChar(c);
         XmlNode* child = mem::new(XmlNode);
@@ -193,7 +196,7 @@ fn void XmlParser.parseTagName(&self, char c) @private {
 	if (c == '/' || c == '>' || c == ' ') {
         XmlNode* nodeBeingParsed = self.peek_node();
         nodeBeingParsed.name = self.copy_write_buffer();
-        io::printf("%s\n", nodeBeingParsed.name);
+        //io::printf("%s\n", nodeBeingParsed.name);
         if (c == '>') {
             self.writeHead = 0;
             self.state = XmlParserState.PARSE_TAG_VALUE;
@@ -212,7 +215,7 @@ fn void XmlParser.parseTagName(&self, char c) @private {
 fn void XmlParser.parseClosingTag(&self, char c) @private {
 	if (c == '>') {      
         XmlNode* node = self.peek_node(); 
-        io::printf("Poping Node: %s\n", node.name); 
+        //io::printf("Poping Node: %s\n", node.name); 
         self.pop_node();
 		self.writeHead = 0;
         self.state = XmlParserState.PARSE_TAG_VALUE;
