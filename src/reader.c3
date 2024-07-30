@@ -2,22 +2,6 @@ module env::xml;
 
 import std::core;
 import std::io;
-import std::collections;
-
-def XmlNodeAttributes = List(<XmlAttribute*>);
-def XmlNodeChildren = List(<XmlNode*>);
-
-struct XmlAttribute {
-    char[] name;
-    char[] value;
-}
-
-struct XmlNode {
-    char[] name;
-    char[] value;
-    XmlNodeAttributes attributes;
-    XmlNodeChildren children;
-}
 
 enum ReaderState {
 	READ_UNTIL_OPEN_BRACE,
@@ -36,8 +20,9 @@ struct Reader {
 	ReaderState state;
 	usz readHead;
 	usz writeHead;
-    XmlNode* root;
     char[] buffer;
+
+    Doc* doc;
 
     // Stack
     XmlNode*[] nodeStack;
@@ -47,8 +32,9 @@ struct Reader {
     XmlAttribute* attributeBeingParsed;
 }
 
-fn Reader* new_reader() {
+fn Reader* new_reader(Doc* doc) {
 	Reader* reader = mem::new(Reader);
+    reader.doc = doc;
 	reader.buffer = mem::new_array(char, 1024);
     reader.nodeStack = mem::new_array(XmlNode*, 10);
     reader.stackHead = -1;
@@ -59,21 +45,7 @@ fn void free(Reader* reader) {
     mem::free(reader.nodeStack);
     reader.stackHead = -1;
     mem::free(reader.buffer);
-    free_node(reader.root);
     mem::free(reader);
-}
-
-fn void free_node(XmlNode* node) @private {
-    if (node == null) {
-        return;
-    }
-    for (usz i = 0; i < node.children.size; i++) {
-        XmlNode* child = node.children[i];
-        free_node(child);
-    }
-    node.children.free();
-    node.attributes.free();
-    mem::free(node);
 }
 
 fn void Reader.read(&self, char[] slice) {
@@ -183,8 +155,8 @@ fn void Reader.parseTag(&self, char c) @private {
         self.writeHead = 0;
 		self.writeChar(c);
         XmlNode* child = mem::new(XmlNode);
-        if (self.root == null) {
-            self.root = child;
+        if (self.doc.rootNode == null) {
+            self.doc.rootNode = child;
         } else {
             XmlNode* nodeBeingParsed = self.peek_node();
             nodeBeingParsed.children.push(child);

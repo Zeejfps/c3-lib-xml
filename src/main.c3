@@ -7,26 +7,28 @@ fn int main(String[] args)
 	File xmlFile = io::file::open("test/gl.xml", "r")!!;
 	File outFile = io::file::open("test/out.txt", "w")!!;
 	
-	char[] buff = mem::new_array(char, 1024);
-	defer mem::free(buff);
+	// char[] buff = mem::new_array(char, 1024);
+	// defer mem::free(buff);
 
-	xml::Reader* reader = xml::new_reader();
-	defer xml::free(reader);
+	// xml::Doc* testDoc = mem::new(xml::Doc);
+	// xml::Reader* reader = xml::new_reader(testDoc);
+	// defer xml::free(reader);
 
-	while (!xmlFile.eof()) {
-		usz bytesRead = xmlFile.read(buff)!!;
-		char[] data = buff[0:bytesRead];
-		//io::printf("bytes read: %d\n", slice.len);
-		reader.read(data);
-	}
+	// while (!xmlFile.eof()) {
+	// 	usz bytesRead = xmlFile.read(buff)!!;
+	// 	char[] data = buff[0:bytesRead];
+	// 	//io::printf("bytes read: %d\n", slice.len);
+	// 	reader.read(data);
+	// }
 
 	xml::Doc* doc = xml::read_file(xmlFile);
 	defer doc.free();
+	io::printf("Is NUll: %b\n", doc.rootNode == null);
 
-	for (usz i = 0; i < reader.root.children.size; i++) {
-		XmlNode* child = reader.root.children[i];
-		printNode(outFile, child, 0, i, reader.root.children.size);
-	}
+	// for (usz i = 0; i < reader.doc.rootNode.children.size; i++) {
+	// 	XmlNode* child = reader.doc.rootNode.children[i];
+	// 	printNode(outFile, child, 0, i, reader.doc.rootNode.children.size);
+	// }
 
 	//io::print("Done!\n");
 
