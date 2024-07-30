@@ -48,13 +48,17 @@ fn void printNode(XmlNode* node, int depth, usz childIndex, usz childCount) {
 		// }
 	// }
 
+	io::printf("%s", node.name, node.attributes.size);
+
 	for (usz i = 0; i < node.attributes.size; i++) {
 		XmlAttribute* attribute = node.attributes[i];
 		io::printf(", %s=\"%s\"", attribute.name, attribute.value);
 	}
 
-	if (node.value != null) {
-		io::printf("Value: %s\n" node.value);
+	if (node.value.len > 0) {
+		String v = (String)node.value;
+		String trimmed = v.trim();
+		io::printf(" Value: %s", trimmed);
 	}
 
 	io::print("\n");
