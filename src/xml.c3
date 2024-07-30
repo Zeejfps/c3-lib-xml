@@ -2,7 +2,7 @@ module env::xml;
 import std::io;
 
 struct Doc {
-    bool data;
+    XmlNode* root;
 }
 
 fn Doc* read_file(File file) {
@@ -22,5 +22,5 @@ fn Doc* read_file(File file) {
 }
 
 fn void Doc.free(&self) {
-    
+
 }

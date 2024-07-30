@@ -73,7 +73,6 @@ fn void printNode(File outFile, XmlNode* node, int depth, usz childIndex, usz ch
 			// io::printf(" Value: %s", trimmed);
 			io::fprintf(stream, " Value: %s", trimmed)!!;
 		}
-	
 	}
 
 	io::fprint(stream, "\n")!!;

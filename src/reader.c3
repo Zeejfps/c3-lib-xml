@@ -7,10 +7,6 @@ import std::collections;
 def XmlNodeAttributes = List(<XmlAttribute*>);
 def XmlNodeChildren = List(<XmlNode*>);
 
-struct XmlRoot {
-    XmlNodeChildren children; 
-}
-
 struct XmlAttribute {
     char[] name;
     char[] value;
@@ -40,7 +36,7 @@ struct Reader {
 	ReaderState state;
 	usz readHead;
 	usz writeHead;
-    XmlRoot* root;
+    XmlNode* root;
     char[] buffer;
 
     // Stack
@@ -54,7 +50,6 @@ struct Reader {
 fn Reader* new_reader() {
 	Reader* reader = mem::new(Reader);
 	reader.buffer = mem::new_array(char, 1024);
-    reader.root = mem::new(XmlRoot);
     reader.nodeStack = mem::new_array(XmlNode*, 10);
     reader.stackHead = -1;
     return reader;
@@ -64,16 +59,14 @@ fn void free(Reader* reader) {
     mem::free(reader.nodeStack);
     reader.stackHead = -1;
     mem::free(reader.buffer);
-    for (usz i = 0; i < reader.root.children.size; i++) {
-        XmlNode* child = reader.root.children[i];
-        free_node(child);
-    }
-    reader.root.children.free();
-    mem::free(reader.root);
+    free_node(reader.root);
     mem::free(reader);
 }
 
 fn void free_node(XmlNode* node) @private {
+    if (node == null) {
+        return;
+    }
     for (usz i = 0; i < node.children.size; i++) {
         XmlNode* child = node.children[i];
         free_node(child);
@@ -190,10 +183,11 @@ fn void Reader.parseTag(&self, char c) @private {
         self.writeHead = 0;
 		self.writeChar(c);
         XmlNode* child = mem::new(XmlNode);
-        if (self.stackHead < 0) {
-            self.root.children.push(child);
+        if (self.root == null) {
+            self.root = child;
         } else {
-            self.nodeStack[self.stackHead].children.push(child);
+            XmlNode* nodeBeingParsed = self.peek_node();
+            nodeBeingParsed.children.push(child);
         }
 
         self.push_node(child);
