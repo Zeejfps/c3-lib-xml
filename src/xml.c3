@@ -176,9 +176,9 @@ fn void XmlParser.parseTag(&self, char c) @private {
 
 fn void XmlParser.parseTagName(&self, char c) @private {
 	if (c == '/' || c == '>' || c == ' ') {
-        XmlNode* child = self.peek_node();
-        child.name = self.copy_write_buffer();
-        io::printf("%s\n", child.name);
+        XmlNode* nodeBeingParsed = self.peek_node();
+        nodeBeingParsed.name = self.copy_write_buffer();
+        io::printf("%s\n", nodeBeingParsed.name);
         if (c == '>') {
             self.writeHead = 0;
             self.state = XmlParserState.PARSE_TAG_VALUE;
@@ -208,14 +208,14 @@ fn void XmlParser.parseAttributeName(&self, char c) @private {
     if (c == '/') {
         self.state = XmlParserState.PARSE_CLOSING_TAG;
     } else if (c == '>') {
-        io::print("Encountered closing brace before parsing attribute value?!\n");
+        //io::print("Encountered closing brace before parsing attribute value?!\n");
         self.state = XmlParserState.PARSE_TAG_VALUE;
     } else if (c == ' ') {
         // Skip space
     } else if (c == '=') {
         char[] attributeName = self.copy_write_buffer();
         self.attributeBeingParsed.name = attributeName;
-        io::printf("Attribute Name %s\n", attributeName);
+        //io::printf("Attribute Name %s\n", attributeName);
 		self.state = XmlParserState.PARSE_ATTRIBUTE_VALUE;
         self.writeHead = 0;
 	} else {
@@ -245,17 +245,13 @@ fn void XmlParser.parseAttributeValueInner(&self, char c) @private {
         self.attributeBeingParsed.value = self.copy_write_buffer();
         XmlNode* nodeBeingParsed = self.peek_node();
         nodeBeingParsed.attributes.push(self.attributeBeingParsed);
-        io::printf("Attribute Value %s\n", self.attributeBeingParsed.value);
+        //io::printf("Attribute Value %s\n", self.attributeBeingParsed.value);
         self.attributeBeingParsed = mem::new(XmlAttribute);
-		self.state = XmlParserState.PARSE_ATTRIBUTE_NAME;
         self.writeHead = 0;
+		self.state = XmlParserState.PARSE_ATTRIBUTE_NAME;
 	} else {
         self.writeChar(c);
     }
-}
-
-fn void XmlParser.clearAttributeBeingParsed(&self) @private {
-	self.attributeBeingParsed = null;
 }
 
 fn void XmlParser.parseHeader(XmlParser* this, char c) @private {
@@ -268,7 +264,8 @@ fn void XmlParser.parseTagValue(&self, char c) @private {
 	if (c == '<') {
         String innerText = (String)self.buffer[0:self.writeHead];
         String trimmedInnerText = innerText.trim();
-        io::printf("Inner Text: %s\n", trimmedInnerText);
+        //io::printf("Inner Text: %s\n", trimmedInnerText);
+        self.writeHead = 0;
 		self.state = XmlParserState.PARSE_TAG;
 	} else {
         self.writeChar(c);
