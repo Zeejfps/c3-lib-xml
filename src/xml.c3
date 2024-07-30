@@ -33,6 +33,7 @@ enum XmlParserState {
     PARSE_ATTRIBUTE_NAME,
     PARSE_ATTRIBUTE_VALUE,
     PARSE_ATTRIBUTE_VALUE_INNER,
+    PARSE_COMMENT,
 }
 
 struct XmlParser {
@@ -52,7 +53,7 @@ struct XmlParser {
 
 fn XmlParser* new() {
 	xml::XmlParser* xmlParser = mem::new(XmlParser);
-	xmlParser.buffer = mem::new_array(char, 64);
+	xmlParser.buffer = mem::new_array(char, 512);
     xmlParser.root = mem::new(XmlRoot);
     xmlParser.nodeStack = mem::new_array(XmlNode*, 10);
     xmlParser.stackHead = -1;
@@ -104,6 +105,9 @@ fn void XmlParser.update(&self, char[] slice) {
             case PARSE_ATTRIBUTE_VALUE_INNER:
                 self.parseAttributeValueInner(c);
                 break;
+            case PARSE_COMMENT:
+                self.parse_comment(c);
+                break;
 		}
 	}
 }
@@ -144,7 +148,9 @@ fn void XmlParser.readUntilOpenBrace(XmlParser* this, char c) @private {
 }
 
 fn void XmlParser.parseTag(&self, char c) @private {
-	if (c == '/') {
+    if (c == '!') {
+        self.state = XmlParserState.PARSE_COMMENT;
+    } else if (c == '/') {
 		// signify its a closing tag
         self.writeHead = 0;
 		self.state = XmlParserState.PARSE_CLOSING_TAG;
@@ -273,4 +279,10 @@ fn void XmlParser.parseTagValue(&self, char c) @private {
 	} else {
         self.writeChar(c);
     } 
+}
+
+fn void XmlParser.parse_comment(&self, char c) @private {
+	if (c == '>') {
+		self.state = XmlParserState.READ_UNTIL_OPEN_BRACE;
+	} 
 }

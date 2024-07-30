@@ -4,7 +4,7 @@ import xml;
 
 fn int main(String[] args)
 {
-	File xmlFile = io::file::open("test/test.xml", "r")!!;
+	File xmlFile = io::file::open("test/gl.xml", "r")!!;
 	
 	char[] buff = mem::new_array(char, 256);
 	defer mem::free(buff);
