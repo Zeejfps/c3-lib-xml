@@ -4,7 +4,7 @@ import std::core;
 import std::io;
 import std::collections;
 
-def XmlNodeAttributes = List(<XmlAttribute>);
+def XmlNodeAttributes = List(<XmlAttribute*>);
 def XmlNodeChildren = List(<XmlNode*>);
 
 struct XmlRoot {
@@ -16,15 +16,10 @@ struct XmlAttribute {
     char[] value;
 }
 
-struct XmlAttributes {
-    XmlAttribute** attributes;
-    usz count;
-}
-
 struct XmlNode {
     char[] name;
     char[] value;
-    XmlAttributes attributes;
+    XmlNodeAttributes attributes;
     XmlNodeChildren children;
 }
 
@@ -50,6 +45,9 @@ struct XmlParser {
     // Stack
     XmlNode*[] nodeStack;
     int stackHead;
+
+    // ----
+    XmlAttribute* attributeBeingParsed;
 }
 
 fn XmlParser* new() {
@@ -158,22 +156,23 @@ fn void XmlParser.parseTag(XmlParser* this, char c) @private {
 	}
 }
 
-fn void XmlParser.parseTagName(XmlParser* this, char c) {
+fn void XmlParser.parseTagName(&self, char c) {
 	if (c == '>' || c == ' ') {
-        usz tagNameLength = this.writeHead;
-        XmlNode* child = this.nodeStack[this.stackHead];
+        usz tagNameLength = self.writeHead;
+        XmlNode* child = self.nodeStack[self.stackHead];
         child.name = mem::new_array(char, tagNameLength);
-        mem::copy(child.name, this.buffer, tagNameLength);
+        mem::copy(child.name, self.buffer, tagNameLength);
         io::printf("%s\n", child.name);
-		this.writeHead = 0;
+		self.writeHead = 0;
 
         if (c == '>') {
-            this.state = XmlParserState.PARSE_TAG_VALUE;
+            self.state = XmlParserState.PARSE_TAG_VALUE;
         } else if (c == ' ') {
-            this.state = XmlParserState.PARSE_ATTRIBUTE_NAME;
+            self.attributeBeingParsed = mem::new(XmlAttribute);
+            self.state = XmlParserState.PARSE_ATTRIBUTE_NAME;
         }
 	} else {
-		this.writeChar(c);
+		self.writeChar(c);
 	}
 }
 
@@ -204,7 +203,8 @@ fn void XmlParser.parseAttributeName(&self, char c) {
     } else if (c == ' ') {
         // Skip space
     } else if (c == '=') {
-        char[] attributeName = self.buffer[0:self.writeHead];
+        char[] attributeName = self.copy_write_buffer();
+        self.attributeBeingParsed.name = attributeName;
         io::printf("Attribute Name %s\n", attributeName);
 		self.state = XmlParserState.PARSE_ATTRIBUTE_VALUE;
         self.writeHead = 0;
@@ -223,15 +223,33 @@ fn void XmlParser.parseAttributeValue(&self, char c) {
     }
 }
 
+fn char[] XmlParser.copy_write_buffer(&self) {
+    usz strLength = self.writeHead;
+    char[] strValue = mem::new_array(char, strLength);
+    mem::copy(strValue, self.buffer, strLength);
+    return strValue;
+}
+
 fn void XmlParser.parseAttributeValueInner(&self, char c) {
 	if (c == '"') {
-        char[] attributeValue = self.buffer[0:self.writeHead];
-        io::printf("Attribute Value %s\n", attributeValue);
+        self.attributeBeingParsed.value = self.copy_write_buffer();
+        XmlNode* nodeBeingParsed = self.getNodeBeingParsed();
+        nodeBeingParsed.attributes.push(self.attributeBeingParsed);
+        io::printf("Attribute Value %s\n", self.attributeBeingParsed.value);
+        self.attributeBeingParsed = mem::new(XmlAttribute);
 		self.state = XmlParserState.PARSE_ATTRIBUTE_NAME;
         self.writeHead = 0;
 	} else {
         self.writeChar(c);
     }
+}
+
+fn XmlNode* XmlParser.getNodeBeingParsed(&self) {
+	return self.nodeStack[self.stackHead];
+}
+
+fn void XmlParser.clearAttributeBeingParsed(&self) {
+	self.attributeBeingParsed = null;
 }
 
 fn void XmlParser.parseHeader(XmlParser* this, char c) {
@@ -244,8 +262,6 @@ fn void XmlParser.parseTagValue(&self, char c) {
 	if (c == '<') {
         String innerText = (String)self.buffer[0:self.writeHead];
         String trimmedInnerText = innerText.trim();
-        // String s;
-        // s.trim(" ");
         io::printf("Inner Text: %s\n", trimmedInnerText);
 		self.state = XmlParserState.PARSE_TAG;
 	} else {
