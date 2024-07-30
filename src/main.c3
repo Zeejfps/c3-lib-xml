@@ -15,7 +15,7 @@ fn int main(String[] args)
 	while (!xmlFile.eof()) {
 		usz bytesRead = xmlFile.read(buff)!!;
 		char[] slice = buff[0:bytesRead];
-		io::printf("bytes read: %d\n", slice.len);
+		//io::printf("bytes read: %d\n", slice.len);
 		xmlParser.update(slice);
 	}
 
@@ -24,7 +24,7 @@ fn int main(String[] args)
 		printNode(child, 0, i, xmlParser.root.children.size);
 	}
 
-	io::print("Done!\n");
+	//io::print("Done!\n");
 
 	return 0;
 }

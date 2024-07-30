@@ -33,4 +33,19 @@
         <date>2024-07-28</date>
         <headline>Global Warming and Its Impact</headline>
     </newspaper>
+
+
+    <feature api="gl" name="GL_VERSION_4_2" number="4.2">
+        <require comment="Reuse commands from ARB_transform_feedback_instanced">
+            <command name="glDrawTransformFeedbackInstanced"/>
+            <command name="glDrawTransformFeedbackStreamInstanced"/>
+        </require>
+        <!-- Deprecated in OpenGL 4.2 core;
+             deprecate tag not defined/supported yet
+          <deprecate profile="core">
+            <enum name="GL_NUM_COMPRESSED_TEXTURE_FORMATS"/>
+            <enum name="GL_COMPRESSED_TEXTURE_FORMATS"/>
+          </deprecate>
+        -->
+    </feature>
 </library>

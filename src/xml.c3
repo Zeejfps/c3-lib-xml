@@ -138,6 +138,20 @@ fn void XmlParser.pop_node(&self) {
 }
 
 fn XmlNode* XmlParser.peek_node(&self) {
+    if (self.stackHead < 0) {
+        
+        for (usz i = 0; i < self.nodeStack.len; i++) {
+            XmlNode* prevNode = self.nodeStack[i];
+            if (prevNode != null) {
+                io::printf("[%d] Node %s, Value: %s", i, prevNode.name, prevNode.value);
+                for (usz j = 0; j < prevNode.attributes.size; j++) {
+                    XmlAttribute* attr = prevNode.attributes[j];
+                    io::printf(", %s=\"%s\"", attr.name, attr.value);
+                }
+                io::print("\n");
+            }
+        }
+    }
     return self.nodeStack[self.stackHead];
 }
 
@@ -149,6 +163,7 @@ fn void XmlParser.readUntilOpenBrace(XmlParser* this, char c) @private {
 
 fn void XmlParser.parseTag(&self, char c) @private {
     if (c == '!') {
+        // io::print("Parsing comment...\n");
         self.state = XmlParserState.PARSE_COMMENT;
     } else if (c == '/') {
 		// signify its a closing tag
@@ -273,7 +288,18 @@ fn void XmlParser.parseTagValue(&self, char c) @private {
 }
 
 fn void XmlParser.parse_comment(&self, char c) @private {
-	if (c == '>') {
+    self.writeChar(c);
+    if (self.writeHead < 3) {
+        return;
+    }
+
+    if (c != '>') {
+        return;
+    }
+
+    char[] lastThreeChars = self.buffer[self.writeHead-3:3];
+	if (lastThreeChars == "-->") {
+        self.writeHead = 0;
 		self.state = XmlParserState.READ_UNTIL_OPEN_BRACE;
-	} 
+	}
 }
