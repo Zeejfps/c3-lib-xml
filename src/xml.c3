@@ -175,17 +175,19 @@ fn void XmlParser.parseTag(&self, char c) @private {
 }
 
 fn void XmlParser.parseTagName(&self, char c) @private {
-	if (c == '>' || c == ' ') {
+	if (c == '/' || c == '>' || c == ' ') {
         XmlNode* child = self.peek_node();
         child.name = self.copy_write_buffer();
         io::printf("%s\n", child.name);
-		self.writeHead = 0;
-
         if (c == '>') {
+            self.writeHead = 0;
             self.state = XmlParserState.PARSE_TAG_VALUE;
         } else if (c == ' ') {
+            self.writeHead = 0;
             self.attributeBeingParsed = mem::new(XmlAttribute);
             self.state = XmlParserState.PARSE_ATTRIBUTE_NAME;
+        } else if (c == '/') {
+            self.state = XmlParserState.PARSE_CLOSING_TAG;
         }
 	} else {
 		self.writeChar(c);
@@ -193,11 +195,9 @@ fn void XmlParser.parseTagName(&self, char c) @private {
 }
 
 fn void XmlParser.parseClosingTag(XmlParser* this, char c) @private {
-	if (c == '>') {
-		this.state = XmlParserState.PARSE_TAG_VALUE;
-        
+	if (c == '>') {        
         usz tagNameLength = this.writeHead;
-        XmlNode* child = this.nodeStack[this.stackHead];
+        XmlNode* child = this.peek_node();
         char[] tagName = this.buffer[0:tagNameLength];
 
         if (child.name != tagName){
@@ -207,6 +207,8 @@ fn void XmlParser.parseClosingTag(XmlParser* this, char c) @private {
         this.stackHead -= 1;
 		this.writeHead = 0;
 		io::printf("Poping Node %s\n", tagName);
+
+        this.state = XmlParserState.PARSE_TAG_VALUE;
 	} else {
 		this.writeChar(c);
 	}
