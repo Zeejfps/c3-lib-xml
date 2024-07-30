@@ -80,17 +80,20 @@ fn void XmlParser.update(&self, char[] slice) {
         char c = self.readChar(slice)!!;
 		switch (self.state) {
 			case PARSE_HEADER:
-				self.readHeader(c);
+				self.parseHeader(c);
 				break;
 			case READ_UNTIL_OPEN_BRACE:
 				self.readUntilOpenBrace(c);
 				break;
-			case PARSE_TAG_NAME:
-				self.parseNodeName(c);
-				break;
 			case PARSE_TAG:
 				self.parseTag(c);
 				break;
+            case PARSE_TAG_NAME:
+				self.parseTagName(c);
+				break;
+            case PARSE_TAG_VALUE:
+                self.parseTagValue(c);
+                break;
             case PARSE_CLOSING_TAG:
                 self.parseClosingTag(c);
                 break;
@@ -102,9 +105,6 @@ fn void XmlParser.update(&self, char[] slice) {
                 break;
             case PARSE_ATTRIBUTE_VALUE_INNER:
                 self.parseAttributeValueInner(c);
-                break;
-            case PARSE_TAG_VALUE:
-                self.parseNodeValue(c);
                 break;
 		}
 	}
@@ -158,7 +158,7 @@ fn void XmlParser.parseTag(XmlParser* this, char c) @private {
 	}
 }
 
-fn void XmlParser.parseNodeName(XmlParser* this, char c) {
+fn void XmlParser.parseTagName(XmlParser* this, char c) {
 	if (c == '>' || c == ' ') {
         usz tagNameLength = this.writeHead;
         XmlNode* child = this.nodeStack[this.stackHead];
@@ -234,13 +234,13 @@ fn void XmlParser.parseAttributeValueInner(&self, char c) {
     }
 }
 
-fn void XmlParser.readHeader(XmlParser* this, char c) {
+fn void XmlParser.parseHeader(XmlParser* this, char c) {
 	if (c == '>') {
 		this.state = XmlParserState.READ_UNTIL_OPEN_BRACE;
 	}
 }
 
-fn void XmlParser.parseNodeValue(&self, char c) {
+fn void XmlParser.parseTagValue(&self, char c) {
 	if (c == '<') {
         String innerText = (String)self.buffer[0:self.writeHead];
         String trimmedInnerText = innerText.trim();
