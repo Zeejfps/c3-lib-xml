@@ -35,6 +35,7 @@ enum XmlParserState {
     PARSE_CLOSING_TAG,
     PARSE_ATTRIBUTE_NAME,
     PARSE_ATTRIBUTE_VALUE,
+    PARSE_ATTRIBUTE_VALUE_INNER,
 }
 
 struct XmlParser {
@@ -95,6 +96,9 @@ fn void XmlParser.update(XmlParser* this, char[] slice) {
                 break;
             case PARSE_ATTRIBUTE_VALUE:
                 this.parseAttributeValue(slice);
+                break;
+            case PARSE_ATTRIBUTE_VALUE_INNER:
+                this.parseAttributeValueInner(slice);
                 break;
 		}
 	}
@@ -194,10 +198,11 @@ fn void XmlParser.parseClosingTag(XmlParser* this, char[] slice) {
 fn void XmlParser.parseAttributeName(&self, char[] slice) {
 	char c = self.readChar(slice)!!;
     if (c == '>') {
+        io::print("Encountered closing brace before parsing attribute value?!\n");
         self.state = XmlParserState.READ_UNTIL_OPEN_BRACE;
-    } if (c == '=') {
-
-    } else if (c == '"') {
+    } else if (c == ' ') {
+        // Skip space
+    } else if (c == '=') {
         char[] attributeName = self.buffer[0:self.writeHead];
         io::printf("Attribute Name %s\n", attributeName);
 		self.state = XmlParserState.PARSE_ATTRIBUTE_VALUE;
@@ -208,6 +213,17 @@ fn void XmlParser.parseAttributeName(&self, char[] slice) {
 }
 
 fn void XmlParser.parseAttributeValue(&self, char[] slice) {
+	char c = self.readChar(slice)!!;
+    if (c == ' ') {
+        // Skip
+    } else if (c == '"') {
+        self.state = XmlParserState.PARSE_ATTRIBUTE_VALUE_INNER;
+	} else {
+        io::printf("Encountere unknown character %s\n", c);
+    }
+}
+
+fn void XmlParser.parseAttributeValueInner(&self, char[] slice) {
 	char c = self.readChar(slice)!!;
 	if (c == '"') {
         char[] attributeValue = self.buffer[0:self.writeHead];
