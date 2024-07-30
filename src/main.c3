@@ -13,6 +13,9 @@ fn int main(String[] args)
 	xml::Reader* reader = xml::new_reader();
 	defer xml::free(reader);
 
+	// xml::Doc* doc = xml::read_file(xmlFile);
+	// defer doc.free();
+
 	while (!xmlFile.eof()) {
 		usz bytesRead = xmlFile.read(buff)!!;
 		char[] data = buff[0:bytesRead];
