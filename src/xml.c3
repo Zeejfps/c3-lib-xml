@@ -22,6 +22,7 @@ struct XmlAttributes {
 
 struct XmlNode {
     char[] name;
+    char[] value;
     XmlAttributes attributes;
     XmlNodeChildren children;
 }
@@ -32,7 +33,8 @@ enum XmlParserState {
 	DETECT_CLOSING_TAG,
 	PARSE_HEADER,
     PARSE_CLOSING_TAG,
-    PARSE_ATTRIBUTE,
+    PARSE_ATTRIBUTE_NAME,
+    PARSE_ATTRIBUTE_VALUE,
 }
 
 struct XmlParser {
@@ -88,8 +90,11 @@ fn void XmlParser.update(XmlParser* this, char[] slice) {
             case PARSE_CLOSING_TAG:
                 this.parseClosingTag(slice);
                 break;
-            case PARSE_ATTRIBUTE:
-                this.parseAttribute(slice);
+            case PARSE_ATTRIBUTE_NAME:
+                this.parseAttributeName(slice);
+                break;
+            case PARSE_ATTRIBUTE_VALUE:
+                this.parseAttributeValue(slice);
                 break;
 		}
 	}
@@ -158,7 +163,7 @@ fn void XmlParser.parseTagName(XmlParser* this, char[] slice) {
         if (c == '>') {
             this.state = XmlParserState.READ_UNTIL_OPEN_BRACE;
         } else if (c == ' ') {
-            this.state = XmlParserState.PARSE_ATTRIBUTE;
+            this.state = XmlParserState.PARSE_ATTRIBUTE_NAME;
         }
 	} else {
 		this.writeChar(c);
@@ -186,12 +191,29 @@ fn void XmlParser.parseClosingTag(XmlParser* this, char[] slice) {
 	}
 }
 
-fn void XmlParser.parseAttribute(&self, char[] slice) {
+fn void XmlParser.parseAttributeName(&self, char[] slice) {
 	char c = self.readChar(slice)!!;
-	if (c == '>') {
-        char[] attribute = self.buffer[0:self.writeHead];
-        io::printf("Attribute %s\n", attribute);
-		self.state = XmlParserState.READ_UNTIL_OPEN_BRACE;
+    if (c == '>') {
+        self.state = XmlParserState.READ_UNTIL_OPEN_BRACE;
+    } if (c == '=') {
+
+    } else if (c == '"') {
+        char[] attributeName = self.buffer[0:self.writeHead];
+        io::printf("Attribute Name %s\n", attributeName);
+		self.state = XmlParserState.PARSE_ATTRIBUTE_VALUE;
+        self.writeHead = 0;
+	} else {
+        self.writeChar(c);
+    }
+}
+
+fn void XmlParser.parseAttributeValue(&self, char[] slice) {
+	char c = self.readChar(slice)!!;
+	if (c == '"') {
+        char[] attributeValue = self.buffer[0:self.writeHead];
+        io::printf("Attribute Value %s\n", attributeValue);
+		self.state = XmlParserState.PARSE_ATTRIBUTE_NAME;
+        self.writeHead = 0;
 	} else {
         self.writeChar(c);
     }
