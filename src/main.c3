@@ -15,9 +15,9 @@ fn int main(String[] args)
 
 	while (!xmlFile.eof()) {
 		usz bytesRead = xmlFile.read(buff)!!;
-		char[] slice = buff[0:bytesRead];
+		char[] data = buff[0:bytesRead];
 		//io::printf("bytes read: %d\n", slice.len);
-		reader.update(slice);
+		reader.read(data);
 	}
 
 	for (usz i = 0; i < reader.root.children.size; i++) {

@@ -83,7 +83,7 @@ fn void free_node(XmlNode* node) @private {
     mem::free(node);
 }
 
-fn void Reader.update(&self, char[] slice) {
+fn void Reader.read(&self, char[] slice) {
 	self.readHead = 0;
 	while (self.readHead < slice.len) {
         char c = self.readChar(slice)!!;
