@@ -1,5 +1,6 @@
 module xml;
 
+import std::core;
 import std::io;
 import std::collections;
 
@@ -36,6 +37,7 @@ enum XmlParserState {
     PARSE_ATTRIBUTE_NAME,
     PARSE_ATTRIBUTE_VALUE,
     PARSE_ATTRIBUTE_VALUE_INNER,
+    PARSE_NODE_VALUE,
 }
 
 struct XmlParser {
@@ -99,6 +101,9 @@ fn void XmlParser.update(XmlParser* this, char[] slice) {
                 break;
             case PARSE_ATTRIBUTE_VALUE_INNER:
                 this.parseAttributeValueInner(slice);
+                break;
+            case PARSE_NODE_VALUE:
+                this.parseNodeValue(slice);
                 break;
 		}
 	}
@@ -165,7 +170,7 @@ fn void XmlParser.parseTagName(XmlParser* this, char[] slice) {
 		this.writeHead = 0;
 
         if (c == '>') {
-            this.state = XmlParserState.READ_UNTIL_OPEN_BRACE;
+            this.state = XmlParserState.PARSE_NODE_VALUE;
         } else if (c == ' ') {
             this.state = XmlParserState.PARSE_ATTRIBUTE_NAME;
         }
@@ -177,7 +182,7 @@ fn void XmlParser.parseTagName(XmlParser* this, char[] slice) {
 fn void XmlParser.parseClosingTag(XmlParser* this, char[] slice) {
 	char c = this.readChar(slice)!!;
 	if (c == '>') {
-		this.state = XmlParserState.READ_UNTIL_OPEN_BRACE;
+		this.state = XmlParserState.PARSE_NODE_VALUE;
         
         usz tagNameLength = this.writeHead;
         XmlNode* child = this.nodeStack[this.stackHead];
@@ -199,7 +204,7 @@ fn void XmlParser.parseAttributeName(&self, char[] slice) {
 	char c = self.readChar(slice)!!;
     if (c == '>') {
         io::print("Encountered closing brace before parsing attribute value?!\n");
-        self.state = XmlParserState.READ_UNTIL_OPEN_BRACE;
+        self.state = XmlParserState.PARSE_NODE_VALUE;
     } else if (c == ' ') {
         // Skip space
     } else if (c == '=') {
@@ -240,4 +245,18 @@ fn void XmlParser.readHeader(XmlParser* this, char[] slice) {
 	if (c == '>') {
 		this.state = XmlParserState.READ_UNTIL_OPEN_BRACE;
 	}
+}
+
+fn void XmlParser.parseNodeValue(&self, char[] slice) {
+	char c = self.readChar(slice)!!;
+	if (c == '<') {
+        String innerText = (String)self.buffer[0:self.writeHead];
+        String trimmedInnerText = innerText.trim();
+        // String s;
+        // s.trim(" ");
+        io::printf("Inner Text: %s\n", trimmedInnerText);
+		self.state = XmlParserState.DETECT_CLOSING_TAG;
+	} else {
+        self.writeChar(c);
+    } 
 }
