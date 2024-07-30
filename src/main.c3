@@ -19,9 +19,9 @@ fn int main(String[] args)
 		xmlParser.update(slice);
 	}
 
-	for (usz i = 0; i < xmlParser.root.children.count; i++) {
-		XmlNode* child = xmlParser.root.children.nodes[i];
-		printNode(child, 0, i, xmlParser.root.children.count);
+	for (usz i = 0; i < xmlParser.root.children.size; i++) {
+		XmlNode* child = xmlParser.root.children[i];
+		printNode(child, 0, i, xmlParser.root.children.size);
 	}
 
 	io::print("Done!\n");
@@ -35,7 +35,7 @@ fn void printNode(XmlNode* node, int depth, usz childIndex, usz childCount) {
 	}
 	// if (depth > 0) {
 		
-		if (node.children.count > 0) {
+		if (node.children.size > 0) {
 			io::print("+");
 		} else {
 			io::print("-");
@@ -51,8 +51,8 @@ fn void printNode(XmlNode* node, int depth, usz childIndex, usz childCount) {
 	io::printf("%s\n", node.name);
 
 	depth = depth + 1;
-	for (usz i = 0; i < node.children.count; i++) {
-		XmlNode* child = node.children.nodes[i];
-		printNode(child, depth, i, node.children.count);
+	for (usz i = 0; i < node.children.size; i++) {
+		XmlNode* child = node.children[i];
+		printNode(child, depth, i, node.children.size);
 	}
 }

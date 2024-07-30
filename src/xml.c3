@@ -1,11 +1,10 @@
 module xml;
 
 import std::io;
+import std::collections;
 
-struct XmlNodeChildren {
-    XmlNode** nodes;
-    usz count;
-}
+def XmlNodeAttributes = List(<XmlAttribute>);
+def XmlNodeChildren = List(<XmlNode*>);
 
 struct XmlRoot {
     XmlNodeChildren children; 
@@ -52,8 +51,6 @@ fn XmlParser* new() {
 	xml::XmlParser* xmlParser = mem::new(XmlParser);
 	xmlParser.buffer = mem::new_array(char, 64);
     xmlParser.root = mem::new(XmlRoot);
-    xmlParser.root.children.nodes = mem::new_array(XmlNode*,50);
-    xmlParser.root.children.count = 0;
     xmlParser.nodeStack = mem::new_array(XmlNode*, 10);
     xmlParser.stackHead = -1;
     return xmlParser;
@@ -63,11 +60,11 @@ fn void free(XmlParser* xmlParser) {
     mem::free(xmlParser.nodeStack);
     xmlParser.stackHead = -1;
     mem::free(xmlParser.buffer);
-    for (usz i = 0; i < xmlParser.root.children.count; i++) {
-        XmlNode* child = xmlParser.root.children.nodes[i];
+    for (usz i = 0; i < xmlParser.root.children.size; i++) {
+        XmlNode* child = xmlParser.root.children[i];
         mem::free(child);
     }
-    mem::free(xmlParser.root.children.nodes);
+    xmlParser.root.children.free();
     mem::free(xmlParser.root);
     mem::free(xmlParser);
 }
@@ -137,12 +134,10 @@ fn void XmlParser.detectClosingTag(XmlParser* this, char[] slice) {
 		this.state = XmlParserState.PARSE_TAG_NAME;
 
         XmlNode* child = mem::new(XmlNode);
-        child.children.nodes = mem::new_array(XmlNode*, 10);
-        child.children.count = 0;
         if (this.stackHead < 0) {
-            this.root.children.add(child);
+            this.root.children.push(child);
         } else {
-            this.nodeStack[this.stackHead].children.add(child);
+            this.nodeStack[this.stackHead].children.push(child);
         }
 
         this.stackHead += 1;
@@ -207,10 +202,4 @@ fn void XmlParser.readHeader(XmlParser* this, char[] slice) {
 	if (c == '>') {
 		this.state = XmlParserState.READ_UNTIL_OPEN_BRACE;
 	}
-}
-
-fn void XmlNodeChildren.add(XmlNodeChildren* this, XmlNode* child) {
-    usz index = this.count;
-    this.nodes[index] = child;
-    this.count = index + 1;
 }
