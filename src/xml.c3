@@ -20,7 +20,7 @@ enum XmlParserState {
 	READ_UNTIL_OPEN_BRACE,
 	READ_UNTIL_CLOSE_BRACE,
 	DETECT_CLOSING_TAG,
-	READ_HEADER,
+	PARSE_HEADER,
     PARSE_CLOSING_TAG,
 }
 
@@ -64,7 +64,7 @@ fn void XmlParser.update(XmlParser* this, char[] slice) {
 	this.readHead = 0;
 	while (this.readHead < slice.len) {
 		switch (this.state) {
-			case READ_HEADER:
+			case PARSE_HEADER:
 				this.readHeader(slice);
 				break;
 			case READ_UNTIL_OPEN_BRACE:
@@ -113,7 +113,7 @@ fn void XmlParser.detectClosingTag(XmlParser* this, char[] slice) {
         this.writeHead = 0;
 		this.state = XmlParserState.PARSE_CLOSING_TAG;
 	} else if (c == '?') {
-		this.state = READ_HEADER;
+		this.state = PARSE_HEADER;
 	} else {
 
         io::print("Pushing node: ");
