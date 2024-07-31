@@ -22,7 +22,7 @@ struct Reader {
 	usz writeHead;
     char[] buffer;
 
-    Doc* doc;
+    XmlDoc* doc;
 
     // Stack
     XmlNode*[] nodeStack;
@@ -32,7 +32,7 @@ struct Reader {
     XmlAttribute* attributeBeingParsed;
 }
 
-fn Reader* new_reader(Doc* doc) {
+fn Reader* new_reader(XmlDoc* doc) {
 	Reader* reader = mem::new(Reader);
     reader.doc = doc;
 	reader.buffer = mem::new_array(char, 1024);

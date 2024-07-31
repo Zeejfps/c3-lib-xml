@@ -21,7 +21,7 @@ fn int main(String[] args)
 	// 	reader.read(data);
 	// }
 
-	Doc* doc = xml::read_file(xmlFile);
+	XmlDoc* doc = xml::read_file(xmlFile);
 	defer doc.free();
 	io::printf("Is NUll: %b\n", doc.rootNode == null);
 
@@ -31,7 +31,7 @@ fn int main(String[] args)
 	io::printf("book nodes %d\n", bookNodes.size);
 
 	foreach (node : bookNodes) {
-		char[]! id = node.get_attrib_value("wds");
+		char[]! id = node.get_attrib_value("id");
 		if (try id) {
 			io::printf("Id %s\n", id);
 		} else if (catch id) {

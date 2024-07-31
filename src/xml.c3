@@ -21,15 +21,15 @@ struct XmlNode {
     XmlNodeList children;
 }
 
-struct Doc {
+struct XmlDoc {
     XmlNode* rootNode;
 }
 
-fn Doc* read_file(File file) {
+fn XmlDoc* read_file(File file) {
     char[] buff = mem::new_array(char, 1024);
 	defer mem::free(buff);
 
-    Doc* doc = mem::new(Doc);
+    XmlDoc* doc = mem::new(XmlDoc);
     Reader* reader = new_reader(doc);
 	defer xml::free(reader);
 
@@ -42,7 +42,7 @@ fn Doc* read_file(File file) {
     return doc;
 }
 
-fn void Doc.free(&self) {
+fn void XmlDoc.free(&self) {
     free_node(self.rootNode);
     mem::free(self);
 }
@@ -60,7 +60,7 @@ fn void free_node(XmlNode* node) @private {
     mem::free(node);
 }
 
-fn void Doc.find_nodes_by_type(&self, char[] type, XmlNodeList* cache) {
+fn void XmlDoc.find_nodes_by_type(&self, char[] type, XmlNodeList* cache) {
     XmlNode* node = self.rootNode;
     node.find_nodes_by_type(type, cache);
 }
