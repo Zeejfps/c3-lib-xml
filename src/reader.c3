@@ -11,8 +11,8 @@ enum ReaderState {
     READ_TEXT_NODE,
     READ_CLOSING_TAG,
     READ_ATTRIBUTE_NAME,
-    READ_ATTRIBUTE_VALUE,
-    READ_ATTRIBUTE_VALUE_INNER,
+    BEGIN_READ_ATTRIBUTE_VALUE,
+    END_READ_ATTRIBUTE_VALUE,
     READ_COMMENT,
 }
 
@@ -53,31 +53,31 @@ fn void XmlReader.read(&self, char[] slice) {
         char c = self.readChar(slice)!!;
 		switch (self.state) {
 			case READ_HEADER:
-				self.parseHeader(c);
+				self.read_header(c);
 				break;
 			case READ_UNTIL_OPEN_BRACE:
-				self.readUntilOpenBrace(c);
+				self.read_until_open_brace(c);
 				break;
 			case READ_TAG:
-				self.parseTag(c);
+				self.read_tag(c);
 				break;
             case READ_TAG_NAME:
-				self.parseTagName(c);
+				self.read_tag_name(c);
 				break;
             case READ_TEXT_NODE:
-                self.readTextNode(c);
+                self.read_text_node(c);
                 break;
             case READ_CLOSING_TAG:
-                self.parseClosingTag(c);
+                self.read_closing_tag(c);
                 break;
             case READ_ATTRIBUTE_NAME:
-                self.parseAttributeName(c);
+                self.read_attribute_name(c);
                 break;
-            case READ_ATTRIBUTE_VALUE:
-                self.parseAttributeValue(c);
+            case BEGIN_READ_ATTRIBUTE_VALUE:
+                self.begin_read_attribute_value(c);
                 break;
-            case READ_ATTRIBUTE_VALUE_INNER:
-                self.parseAttributeValueInner(c);
+            case END_READ_ATTRIBUTE_VALUE:
+                self.end_read_attribute_value(c);
                 break;
             case READ_COMMENT:
                 self.parse_comment(c);
@@ -132,13 +132,13 @@ fn XmlNode* XmlReader.peek_node(&self) {
     return self.nodeStack[self.stackHead];
 }
 
-fn void XmlReader.readUntilOpenBrace(&self, char c) @private {
+fn void XmlReader.read_until_open_brace(&self, char c) @private {
 	if (c == '<') {
 		self.state = ReaderState.READ_TAG;
 	}
 }
 
-fn void XmlReader.parseTag(&self, char c) @private {
+fn void XmlReader.read_tag(&self, char c) @private {
     if (c == '!') {
         // io::print("Parsing comment...\n");
         self.state = ReaderState.READ_COMMENT;
@@ -167,7 +167,7 @@ fn void XmlReader.parseTag(&self, char c) @private {
 	}
 }
 
-fn void XmlReader.parseTagName(&self, char c) @private {
+fn void XmlReader.read_tag_name(&self, char c) @private {
 	if (c == '/' || c == '>' || c == ' ') {
         XmlNode* nodeBeingParsed = self.peek_node();
         nodeBeingParsed.name = self.copy_write_buffer();
@@ -187,10 +187,9 @@ fn void XmlReader.parseTagName(&self, char c) @private {
 	}
 }
 
-fn void XmlReader.parseClosingTag(&self, char c) @private {
+fn void XmlReader.read_closing_tag(&self, char c) @private {
 	if (c == '>') {      
         XmlNode* node = self.peek_node(); 
-        //io::printf("Poping Node: %s\n", node.name); 
         self.pop_node();
 		self.writeHead = 0;
         self.state = ReaderState.READ_TEXT_NODE;
@@ -202,30 +201,28 @@ fn void XmlReader.enterReadTextNodeState(&self) @private {
     self.state = ReaderState.READ_TEXT_NODE;
 }
 
-fn void XmlReader.parseAttributeName(&self, char c) @private {
+fn void XmlReader.read_attribute_name(&self, char c) @private {
     if (c == '/') {
         self.state = ReaderState.READ_CLOSING_TAG;
     } else if (c == '>') {
-        //io::print("Encountered closing brace before parsing attribute value?!\n");
         self.enterReadTextNodeState();
     } else if (c == ' ') {
         // Skip space
     } else if (c == '=') {
         char[] attributeName = self.copy_write_buffer();
         self.attributeBeingParsed.name = attributeName;
-        //io::printf("Attribute Name %s\n", attributeName);
-		self.state = ReaderState.READ_ATTRIBUTE_VALUE;
+		self.state = ReaderState.BEGIN_READ_ATTRIBUTE_VALUE;
         self.writeHead = 0;
 	} else {
         self.writeChar(c);
     }
 }
 
-fn void XmlReader.parseAttributeValue(&self, char c) @private {
+fn void XmlReader.begin_read_attribute_value(&self, char c) @private {
     if (c == ' ') {
         // Skip
     } else if (c == '"') {
-        self.state = ReaderState.READ_ATTRIBUTE_VALUE_INNER;
+        self.state = ReaderState.END_READ_ATTRIBUTE_VALUE;
 	} else {
         io::printf("Encountere unknown character %s\n", c);
     }
@@ -238,7 +235,7 @@ fn char[] XmlReader.copy_write_buffer(&self) @private {
     return strValue;
 }
 
-fn void XmlReader.parseAttributeValueInner(&self, char c) @private {
+fn void XmlReader.end_read_attribute_value(&self, char c) @private {
 	if (c == '"') {
         self.attributeBeingParsed.value = self.copy_write_buffer();
         XmlNode* nodeBeingParsed = self.peek_node();
@@ -252,13 +249,13 @@ fn void XmlReader.parseAttributeValueInner(&self, char c) @private {
     }
 }
 
-fn void XmlReader.parseHeader(&self, char c) @private {
+fn void XmlReader.read_header(&self, char c) @private {
 	if (c == '>') {
 		self.state = ReaderState.READ_UNTIL_OPEN_BRACE;
 	}
 }
 
-fn void XmlReader.readTextNode(&self, char c) @private {
+fn void XmlReader.read_text_node(&self, char c) @private {
 	if (c == '<') {
         if (self.writeHead > 0) {
             char[] textNodeValue = self.copy_write_buffer();
