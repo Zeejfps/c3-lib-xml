@@ -25,7 +25,7 @@ struct Reader {
     Doc* doc;
 
     // Stack
-    Node*[] nodeStack;
+    XmlNode*[] nodeStack;
     int stackHead;
 
     // ----
@@ -36,7 +36,7 @@ fn Reader* new_reader(Doc* doc) {
 	Reader* reader = mem::new(Reader);
     reader.doc = doc;
 	reader.buffer = mem::new_array(char, 1024);
-    reader.nodeStack = mem::new_array(Node*, 10);
+    reader.nodeStack = mem::new_array(XmlNode*, 10);
     reader.stackHead = -1;
     return reader;
 }
@@ -106,7 +106,7 @@ fn void Reader.writeChar(&self, char c) @private {
 	self.writeHead = writeHead + 1;
 }	
 
-fn void Reader.push_node(&self, Node* node) {
+fn void Reader.push_node(&self, XmlNode* node) {
     self.stackHead += 1;
     self.nodeStack[self.stackHead] = node;
 }
@@ -115,7 +115,21 @@ fn void Reader.pop_node(&self) {
     self.stackHead -= 1;
 }
 
-fn Node* Reader.peek_node(&self) {
+fn XmlNode* Reader.peek_node(&self) {
+    if (self.stackHead < 0) {
+        
+        for (usz i = 0; i < self.nodeStack.len; i++) {
+            XmlNode* prevNode = self.nodeStack[i];
+            if (prevNode != null) {
+                io::printf("[%d] Node %s, Value: %s", i, prevNode.name, prevNode.value);
+                for (usz j = 0; j < prevNode.attributes.size; j++) {
+                    XmlAttribute* attr = prevNode.attributes[j];
+                    io::printf(", %s=\"%s\"", attr.name, attr.value);
+                }
+                io::print("\n");
+            }
+        }
+    }
     return self.nodeStack[self.stackHead];
 }
 
@@ -140,11 +154,11 @@ fn void Reader.parseTag(&self, char c) @private {
         //io::print("Pushing node: ");
         self.writeHead = 0;
 		self.writeChar(c);
-        Node* child = mem::new(Node);
+        XmlNode* child = mem::new(XmlNode);
         if (self.doc.rootNode == null) {
             self.doc.rootNode = child;
         } else {
-            Node* nodeBeingParsed = self.peek_node();
+            XmlNode* nodeBeingParsed = self.peek_node();
             nodeBeingParsed.children.push(child);
         }
 
@@ -156,8 +170,8 @@ fn void Reader.parseTag(&self, char c) @private {
 
 fn void Reader.parseTagName(&self, char c) @private {
 	if (c == '/' || c == '>' || c == ' ') {
-        Node* nodeBeingParsed = self.peek_node();
-        nodeBeingParsed.type = self.copy_write_buffer();
+        XmlNode* nodeBeingParsed = self.peek_node();
+        nodeBeingParsed.name = self.copy_write_buffer();
         //io::printf("%s\n", nodeBeingParsed.name);
         if (c == '>') {
             self.writeHead = 0;
@@ -176,7 +190,7 @@ fn void Reader.parseTagName(&self, char c) @private {
 
 fn void Reader.parseClosingTag(&self, char c) @private {
 	if (c == '>') {      
-        Node* node = self.peek_node(); 
+        XmlNode* node = self.peek_node(); 
         //io::printf("Poping Node: %s\n", node.name); 
         self.pop_node();
 		self.writeHead = 0;
@@ -228,7 +242,7 @@ fn char[] Reader.copy_write_buffer(&self) @private {
 fn void Reader.parseAttributeValueInner(&self, char c) @private {
 	if (c == '"') {
         self.attributeBeingParsed.value = self.copy_write_buffer();
-        Node* nodeBeingParsed = self.peek_node();
+        XmlNode* nodeBeingParsed = self.peek_node();
         nodeBeingParsed.attributes.push(self.attributeBeingParsed);
         //io::printf("Attribute Value %s\n", self.attributeBeingParsed.value);
         self.attributeBeingParsed = mem::new(XmlAttribute);
@@ -249,11 +263,11 @@ fn void Reader.readTextNode(&self, char c) @private {
 	if (c == '<') {
         if (self.writeHead > 0) {
             char[] textNodeValue = self.copy_write_buffer();
-            Node* textNode = mem::new(Node);
-            textNode.type = "text";
+            XmlNode* textNode = mem::new(XmlNode);
+            textNode.name = "text";
             textNode.value = textNodeValue;
             // io::printf("%s\n", textNodeValue);
-            Node* nodeBeingParsed = self.peek_node();
+            XmlNode* nodeBeingParsed = self.peek_node();
             nodeBeingParsed.children.push(textNode);
         }
         self.writeHead = 0;
