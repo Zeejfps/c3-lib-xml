@@ -30,7 +30,7 @@ fn XmlDoc* read_file(File file) {
 	defer mem::free(buff);
 
     XmlDoc* doc = mem::new(XmlDoc);
-    Reader* reader = new_reader(doc);
+    XmlReader* reader = new_reader(doc);
 	defer xml::free(reader);
 
     while (!file.eof()) {

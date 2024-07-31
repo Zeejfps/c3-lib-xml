@@ -16,7 +16,7 @@ enum ReaderState {
     PARSE_COMMENT,
 }
 
-struct Reader {
+struct XmlReader {
 	ReaderState state;
 	usz readHead;
 	usz writeHead;
@@ -32,8 +32,8 @@ struct Reader {
     XmlAttribute* attributeBeingParsed;
 }
 
-fn Reader* new_reader(XmlDoc* doc) {
-	Reader* reader = mem::new(Reader);
+fn XmlReader* new_reader(XmlDoc* doc) {
+	XmlReader* reader = mem::new(XmlReader);
     reader.doc = doc;
 	reader.buffer = mem::new_array(char, 1024);
     reader.nodeStack = mem::new_array(XmlNode*, 10);
@@ -41,14 +41,14 @@ fn Reader* new_reader(XmlDoc* doc) {
     return reader;
 }
 
-fn void free(Reader* reader) {
+fn void free(XmlReader* reader) {
     mem::free(reader.nodeStack);
     reader.stackHead = -1;
     mem::free(reader.buffer);
     mem::free(reader);
 }
 
-fn void Reader.read(&self, char[] slice) {
+fn void XmlReader.read(&self, char[] slice) {
 	self.readHead = 0;
 	while (self.readHead < slice.len) {
         char c = self.readChar(slice)!!;
@@ -87,7 +87,7 @@ fn void Reader.read(&self, char[] slice) {
 	}
 }
 
-fn char! Reader.readChar(&self, char[] slice) @private {
+fn char! XmlReader.readChar(&self, char[] slice) @private {
 	usz readHead = self.readHead;
 	if (readHead >= slice.len){
 		return IoError.EOF?;
@@ -97,7 +97,7 @@ fn char! Reader.readChar(&self, char[] slice) @private {
 	return c;
 }	
 
-fn void Reader.writeChar(&self, char c) @private {
+fn void XmlReader.writeChar(&self, char c) @private {
 	usz writeHead = self.writeHead;
     if (writeHead >= self.buffer.len) {
         io::printf("%s\n", self.buffer);
@@ -106,16 +106,16 @@ fn void Reader.writeChar(&self, char c) @private {
 	self.writeHead = writeHead + 1;
 }	
 
-fn void Reader.push_node(&self, XmlNode* node) {
+fn void XmlReader.push_node(&self, XmlNode* node) {
     self.stackHead += 1;
     self.nodeStack[self.stackHead] = node;
 }
 
-fn void Reader.pop_node(&self) {
+fn void XmlReader.pop_node(&self) {
     self.stackHead -= 1;
 }
 
-fn XmlNode* Reader.peek_node(&self) {
+fn XmlNode* XmlReader.peek_node(&self) {
     if (self.stackHead < 0) {
         
         for (usz i = 0; i < self.nodeStack.len; i++) {
@@ -133,13 +133,13 @@ fn XmlNode* Reader.peek_node(&self) {
     return self.nodeStack[self.stackHead];
 }
 
-fn void Reader.readUntilOpenBrace(&self, char c) @private {
+fn void XmlReader.readUntilOpenBrace(&self, char c) @private {
 	if (c == '<') {
 		self.state = ReaderState.PARSE_TAG;
 	}
 }
 
-fn void Reader.parseTag(&self, char c) @private {
+fn void XmlReader.parseTag(&self, char c) @private {
     if (c == '!') {
         // io::print("Parsing comment...\n");
         self.state = ReaderState.PARSE_COMMENT;
@@ -168,7 +168,7 @@ fn void Reader.parseTag(&self, char c) @private {
 	}
 }
 
-fn void Reader.parseTagName(&self, char c) @private {
+fn void XmlReader.parseTagName(&self, char c) @private {
 	if (c == '/' || c == '>' || c == ' ') {
         XmlNode* nodeBeingParsed = self.peek_node();
         nodeBeingParsed.name = self.copy_write_buffer();
@@ -188,7 +188,7 @@ fn void Reader.parseTagName(&self, char c) @private {
 	}
 }
 
-fn void Reader.parseClosingTag(&self, char c) @private {
+fn void XmlReader.parseClosingTag(&self, char c) @private {
 	if (c == '>') {      
         XmlNode* node = self.peek_node(); 
         //io::printf("Poping Node: %s\n", node.name); 
@@ -198,12 +198,12 @@ fn void Reader.parseClosingTag(&self, char c) @private {
 	}
 }
 
-fn void Reader.enterReadTextNodeState(&self) @private {
+fn void XmlReader.enterReadTextNodeState(&self) @private {
     self.writeHead = 0;
     self.state = ReaderState.READ_TEXT_NODE;
 }
 
-fn void Reader.parseAttributeName(&self, char c) @private {
+fn void XmlReader.parseAttributeName(&self, char c) @private {
     if (c == '/') {
         self.state = ReaderState.PARSE_CLOSING_TAG;
     } else if (c == '>') {
@@ -222,7 +222,7 @@ fn void Reader.parseAttributeName(&self, char c) @private {
     }
 }
 
-fn void Reader.parseAttributeValue(&self, char c) @private {
+fn void XmlReader.parseAttributeValue(&self, char c) @private {
     if (c == ' ') {
         // Skip
     } else if (c == '"') {
@@ -232,14 +232,14 @@ fn void Reader.parseAttributeValue(&self, char c) @private {
     }
 }
 
-fn char[] Reader.copy_write_buffer(&self) @private {
+fn char[] XmlReader.copy_write_buffer(&self) @private {
     usz strLength = self.writeHead;
     char[] strValue = mem::new_array(char, strLength);
     mem::copy(strValue, self.buffer, strLength);
     return strValue;
 }
 
-fn void Reader.parseAttributeValueInner(&self, char c) @private {
+fn void XmlReader.parseAttributeValueInner(&self, char c) @private {
 	if (c == '"') {
         self.attributeBeingParsed.value = self.copy_write_buffer();
         XmlNode* nodeBeingParsed = self.peek_node();
@@ -253,13 +253,13 @@ fn void Reader.parseAttributeValueInner(&self, char c) @private {
     }
 }
 
-fn void Reader.parseHeader(&self, char c) @private {
+fn void XmlReader.parseHeader(&self, char c) @private {
 	if (c == '>') {
 		self.state = ReaderState.READ_UNTIL_OPEN_BRACE;
 	}
 }
 
-fn void Reader.readTextNode(&self, char c) @private {
+fn void XmlReader.readTextNode(&self, char c) @private {
 	if (c == '<') {
         if (self.writeHead > 0) {
             char[] textNodeValue = self.copy_write_buffer();
@@ -277,7 +277,7 @@ fn void Reader.readTextNode(&self, char c) @private {
     } 
 }
 
-fn void Reader.parse_comment(&self, char c) @private {
+fn void XmlReader.parse_comment(&self, char c) @private {
     self.writeChar(c);
     if (self.writeHead < 3) {
         return;
