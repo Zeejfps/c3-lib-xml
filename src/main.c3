@@ -10,9 +10,9 @@ fn int main(String[] args)
 	// char[] buff = mem::new_array(char, 1024);
 	// defer mem::free(buff);
 
-	// xml::Doc* testDoc = mem::new(xml::Doc);
-	// xml::Reader* reader = xml::new_reader(testDoc);
-	// defer xml::free(reader);
+	// XmlDoc testDoc;
+	// XmlReader* reader = xml::new_reader(&testDoc);
+	// defer reader.free();
 
 	// while (!xmlFile.eof()) {
 	// 	usz bytesRead = xmlFile.read(buff)!!;
@@ -39,10 +39,10 @@ fn int main(String[] args)
 		io::printf("Id %s\n", id);
 	}
 
-	// for (usz i = 0; i < reader.doc.rootNode.children.size; i++) {
-	// 	XmlNode* child = reader.doc.rootNode.children[i];
-	// 	printNode(outFile, child, 0, i, reader.doc.rootNode.children.size);
-	// }
+	for (usz i = 0; i < doc.rootNode.children.size; i++) {
+		XmlNode* child = doc.rootNode.children[i];
+		printNode(outFile, child, 0, i, doc.rootNode.children.size);
+	}
 
 	//io::print("Done!\n");
 

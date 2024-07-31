@@ -22,14 +22,8 @@ struct XmlReader {
 	usz writeHead;
     char[] buffer;
     Allocator allocator;
-
     XmlDoc* doc;
-
-    // Stack
-    XmlNode*[] nodeStack;
-    int stackHead;
-
-    // ----
+    XmlNodeList nodesBeingParsed;
     XmlAttribute* attributeBeingParsed;
 }
 
@@ -37,8 +31,6 @@ fn XmlReader* new_reader(XmlDoc* doc, Allocator allocator = allocator::heap()) {
 	XmlReader* reader = allocator::new(allocator, XmlReader);
     reader.doc = doc;
 	reader.buffer = allocator::new_array(allocator, char, 2048);
-    reader.nodeStack = allocator::new_array(allocator, XmlNode*, 10);
-    reader.stackHead = -1;
     reader.allocator = allocator;
     return reader;
 }
@@ -49,8 +41,7 @@ fn void XmlReader.free(&self) {
     self.doc = null;
     self.readHead = 0;
     self.writeHead = 0;
-    self.stackHead = 0;
-    allocator::free(self.allocator, self.nodeStack);
+    self.nodesBeingParsed.free();
     allocator::free(self.allocator, self.buffer);
     allocator::free(self.allocator, self);
 }
@@ -116,30 +107,15 @@ fn void XmlReader.writeChar(&self, char c) @private {
 }	
 
 fn void XmlReader.push_node(&self, XmlNode* node) @private {
-    self.stackHead += 1;
-    self.nodeStack[self.stackHead] = node;
+    self.nodesBeingParsed.push(node);
 }
 
 fn void XmlReader.pop_node(&self) @private {
-    self.stackHead -= 1;
+    self.nodesBeingParsed.pop()!!;
 }
 
 fn XmlNode* XmlReader.peek_node(&self) @private {
-    if (self.stackHead < 0) {
-        
-        for (usz i = 0; i < self.nodeStack.len; i++) {
-            XmlNode* prevNode = self.nodeStack[i];
-            if (prevNode != null) {
-                io::printf("[%d] Node %s, Value: %s", i, prevNode.name, prevNode.value);
-                for (usz j = 0; j < prevNode.attributes.size; j++) {
-                    XmlAttribute* attr = prevNode.attributes[j];
-                    io::printf(", %s=\"%s\"", attr.name, attr.value);
-                }
-                io::print("\n");
-            }
-        }
-    }
-    return self.nodeStack[self.stackHead];
+    return self.nodesBeingParsed.last()!!;
 }
 
 fn void XmlReader.begin_read_tag(&self, char c) @private {
