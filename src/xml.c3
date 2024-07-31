@@ -3,22 +3,22 @@ import std::io;
 import std::collections;
 
 def XmlNodeAttributes = List(<XmlAttribute*>);
-def XmlNodeChildren = List(<XmlNode*>);
+def XmlNodeChildren = List(<Node*>);
 
 struct XmlAttribute {
     char[] name;
     char[] value;
 }
 
-struct XmlNode {
-    char[] name;
+struct Node {
+    char[] type;
     char[] value;
     XmlNodeAttributes attributes;
     XmlNodeChildren children;
 }
 
 struct Doc {
-    XmlNode* rootNode;
+    Node* rootNode;
 }
 
 fn Doc* read_file(File file) {
@@ -43,12 +43,12 @@ fn void Doc.free(&self) {
     mem::free(self);
 }
 
-fn void free_node(XmlNode* node) @private {
+fn void free_node(Node* node) @private {
     if (node == null) {
         return;
     }
     for (usz i = 0; i < node.children.size; i++) {
-        XmlNode* child = node.children[i];
+        Node* child = node.children[i];
         free_node(child);
     }
     node.children.free();

@@ -4,7 +4,7 @@ import env::xml;
 
 fn int main(String[] args)
 {
-	File xmlFile = io::file::open("test/gl.xml", "r")!!;
+	File xmlFile = io::file::open("test/test.xml", "r")!!;
 	File outFile = io::file::open("test/out.txt", "w")!!;
 	
 	// char[] buff = mem::new_array(char, 1024);
@@ -25,8 +25,12 @@ fn int main(String[] args)
 	defer doc.free();
 	io::printf("Is NUll: %b\n", doc.rootNode == null);
 
+	xml::Node* root = doc.rootNode;
+	io::printf("Root Node Type: %s\n", root.type);
+
+
 	// for (usz i = 0; i < reader.doc.rootNode.children.size; i++) {
-	// 	XmlNode* child = reader.doc.rootNode.children[i];
+	// 	Node* child = reader.doc.rootNode.children[i];
 	// 	printNode(outFile, child, 0, i, reader.doc.rootNode.children.size);
 	// }
 
@@ -35,7 +39,7 @@ fn int main(String[] args)
 	return 0;
 }
 
-fn void printNode(File outFile, XmlNode* node, int depth, usz childIndex, usz childCount) {
+fn void printNode(File outFile, Node* node, int depth, usz childIndex, usz childCount) {
 
 	OutStream stream = (OutStream)&outFile;
 
@@ -61,7 +65,7 @@ fn void printNode(File outFile, XmlNode* node, int depth, usz childIndex, usz ch
 	// }
 
 	//io::printf("%s", node.name, node.attributes.size);
-	io::fprintf(stream, "%s", node.name, node.attributes.size)!!;
+	io::fprintf(stream, "%s", node.type, node.attributes.size)!!;
 	for (usz i = 0; i < node.attributes.size; i++) {
 		XmlAttribute* attribute = node.attributes[i];
 		//io::printf(", %s=\"%s\"", attribute.name, attribute.value);
@@ -82,7 +86,7 @@ fn void printNode(File outFile, XmlNode* node, int depth, usz childIndex, usz ch
 
 	depth = depth + 1;
 	for (usz i = 0; i < node.children.size; i++) {
-		XmlNode* child = node.children[i];
+		Node* child = node.children[i];
 		printNode(outFile, child, depth, i, node.children.size);
 	}
 }
