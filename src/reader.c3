@@ -86,6 +86,8 @@ fn void XmlReader.read(&self, char[] slice) {
 	}
 }
 
+// Private Section
+
 fn char! XmlReader.readChar(&self, char[] slice) @private {
 	usz readHead = self.readHead;
 	if (readHead >= slice.len){
@@ -105,16 +107,16 @@ fn void XmlReader.writeChar(&self, char c) @private {
 	self.writeHead = writeHead + 1;
 }	
 
-fn void XmlReader.push_node(&self, XmlNode* node) {
+fn void XmlReader.push_node(&self, XmlNode* node) @private {
     self.stackHead += 1;
     self.nodeStack[self.stackHead] = node;
 }
 
-fn void XmlReader.pop_node(&self) {
+fn void XmlReader.pop_node(&self) @private {
     self.stackHead -= 1;
 }
 
-fn XmlNode* XmlReader.peek_node(&self) {
+fn XmlNode* XmlReader.peek_node(&self) @private {
     if (self.stackHead < 0) {
         
         for (usz i = 0; i < self.nodeStack.len; i++) {
