@@ -31,7 +31,7 @@ fn XmlDoc* read_file(File file) {
 
     XmlDoc* doc = mem::new(XmlDoc);
     XmlReader* reader = new_reader(doc);
-	defer xml::free(reader);
+	defer reader.free();
 
     while (!file.eof()) {
 		usz bytesRead = file.read(buff)!!;

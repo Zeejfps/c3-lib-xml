@@ -41,11 +41,10 @@ fn XmlReader* new_reader(XmlDoc* doc) {
     return reader;
 }
 
-fn void free(XmlReader* reader) {
-    mem::free(reader.nodeStack);
-    reader.stackHead = -1;
-    mem::free(reader.buffer);
-    mem::free(reader);
+fn void XmlReader.free(&self) {
+    mem::free(self.nodeStack);
+    mem::free(self.buffer);
+    mem::free(self);
 }
 
 fn void XmlReader.read(&self, char[] slice) {
