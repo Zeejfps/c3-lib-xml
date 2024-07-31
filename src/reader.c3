@@ -21,6 +21,7 @@ struct XmlReader {
 	usz readHead;
 	usz writeHead;
     char[] buffer;
+    Allocator allocator;
 
     XmlDoc* doc;
 
@@ -32,19 +33,26 @@ struct XmlReader {
     XmlAttribute* attributeBeingParsed;
 }
 
-fn XmlReader* new_reader(XmlDoc* doc) {
-	XmlReader* reader = mem::new(XmlReader);
+fn XmlReader* new_reader(XmlDoc* doc, Allocator allocator = allocator::heap()) {
+	XmlReader* reader = allocator::new(allocator, XmlReader);
     reader.doc = doc;
-	reader.buffer = mem::new_array(char, 1024);
-    reader.nodeStack = mem::new_array(XmlNode*, 10);
+	reader.buffer = allocator::new_array(allocator, char, 2048);
+    reader.nodeStack = allocator::new_array(allocator, XmlNode*, 10);
     reader.stackHead = -1;
+    reader.allocator = allocator;
     return reader;
 }
 
 fn void XmlReader.free(&self) {
-    mem::free(self.nodeStack);
-    mem::free(self.buffer);
-    mem::free(self);
+    if (!self.allocator) return;
+    self.attributeBeingParsed = null;
+    self.doc = null;
+    self.readHead = 0;
+    self.writeHead = 0;
+    self.stackHead = 0;
+    allocator::free(self.allocator, self.nodeStack);
+    allocator::free(self.allocator, self.buffer);
+    allocator::free(self.allocator, self);
 }
 
 fn void XmlReader.read(&self, char[] slice) {

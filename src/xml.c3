@@ -22,15 +22,18 @@ struct XmlNode {
 }
 
 struct XmlDoc {
+    Allocator allocator;
     XmlNode* rootNode;
 }
 
-fn XmlDoc*! read_file(File file) {
-    char[] buff = mem::new_array(char, 2048);
-	defer mem::free(buff);
+fn XmlDoc*! read_file(File file, Allocator allocator = allocator::heap()) {
+    char[] buff = allocator::new_array(allocator, char, 2048);
+	defer allocator::free(allocator, buff);
 
-    XmlDoc* doc = mem::new(XmlDoc);
-    XmlReader* reader = new_reader(doc);
+    XmlDoc* doc = allocator::new(allocator, XmlDoc);
+    doc.allocator = allocator;
+
+    XmlReader* reader = new_reader(doc, allocator);
 	defer reader.free();
 
     while (!file.eof()) {
@@ -46,8 +49,9 @@ fn XmlDoc*! read_file(File file) {
 }
 
 fn void XmlDoc.free(&self) {
+    if (!self.allocator) return;
     free_node(self.rootNode);
-    mem::free(self);
+    allocator::free(self.allocator, self);
 }
 
 fn void free_node(XmlNode* node) @private {
