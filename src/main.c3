@@ -4,7 +4,7 @@ import env::xml;
 
 fn int main(String[] args)
 {
-	File xmlFile = io::file::open("test/gl.xml", "r")!!;
+	File xmlFile = io::file::open("test/test.xml", "r")!!;
 	File outFile = io::file::open("test/out.txt", "w")!!;
 	
 	// char[] buff = mem::new_array(char, 1024);
@@ -21,9 +21,14 @@ fn int main(String[] args)
 	// 	reader.read(data);
 	// }
 
-	xml::Doc* doc = xml::read_file(xmlFile);
+	Doc* doc = xml::read_file(xmlFile);
 	defer doc.free();
 	io::printf("Is NUll: %b\n", doc.rootNode == null);
+
+	XmlNodeList bookNodes;
+	defer bookNodes.free();
+	doc.find_nodes_by_type("book", &bookNodes);
+	io::printf("book nodes %d\n", bookNodes.size);
 
 	// for (usz i = 0; i < reader.doc.rootNode.children.size; i++) {
 	// 	XmlNode* child = reader.doc.rootNode.children[i];

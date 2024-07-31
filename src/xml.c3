@@ -3,7 +3,7 @@ import std::io;
 import std::collections;
 
 def XmlNodeAttributes = List(<XmlAttribute*>);
-def XmlNodeChildren = List(<XmlNode*>);
+def XmlNodeList = List(<XmlNode*>);
 
 struct XmlAttribute {
     char[] name;
@@ -14,7 +14,7 @@ struct XmlNode {
     char[] name;
     char[] value;
     XmlNodeAttributes attributes;
-    XmlNodeChildren children;
+    XmlNodeList children;
 }
 
 struct Doc {
@@ -54,4 +54,20 @@ fn void free_node(XmlNode* node) @private {
     node.children.free();
     node.attributes.free();
     mem::free(node);
+}
+
+fn void Doc.find_nodes_by_type(&self, char[] type, XmlNodeList* cache) {
+    XmlNode* node = self.rootNode;
+    node.find_nodes_by_type(type, cache);
+}
+
+fn void XmlNode.find_nodes_by_type(&self, char[] type, XmlNodeList* cache) {
+    if (self.name == type) {
+        cache.push(self);
+    }
+
+    for (usz i = 0; i < self.children.size; i++) {
+        XmlNode* childNode = self.children[i];
+        childNode.find_nodes_by_type(type, cache);
+    }
 }
