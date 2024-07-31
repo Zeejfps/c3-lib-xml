@@ -5,6 +5,10 @@ import std::collections;
 def XmlNodeAttributes = List(<XmlAttribute*>);
 def XmlNodeList = List(<XmlNode*>);
 
+fault XmlFault {
+    ATTRIBUTE_NOT_FOUND
+}
+
 struct XmlAttribute {
     char[] name;
     char[] value;
@@ -70,4 +74,14 @@ fn void XmlNode.find_nodes_by_type(&self, char[] type, XmlNodeList* cache) {
         XmlNode* childNode = self.children[i];
         childNode.find_nodes_by_type(type, cache);
     }
+}
+
+fn char[]! XmlNode.get_attrib_value(&self, char[] name) {
+    for (usz i = 0; i < self.attributes.size; i++) {
+        XmlAttribute* attribute = self.attributes[i];
+        if (attribute.name == name) {
+            return attribute.value;
+        }
+    }
+    return XmlFault.ATTRIBUTE_NOT_FOUND?;
 }
