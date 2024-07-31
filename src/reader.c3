@@ -3,7 +3,9 @@ module env::xml;
 import std::core;
 import std::io;
 
-enum ReaderState {
+distinct XmlReader = void;
+
+enum ReaderState @local {
 	BEGIN_READ_TAG,
     READ_HEADER,
     END_READ_TAG,
@@ -16,7 +18,7 @@ enum ReaderState {
     READ_COMMENT,
 }
 
-struct XmlReader {
+struct XmlReaderImpl @local {
 	ReaderState state;
 	usz readHead;
 	usz writeHead;
@@ -28,15 +30,15 @@ struct XmlReader {
 }
 
 fn XmlReader* new_reader(XmlDoc* doc, Allocator allocator = allocator::heap()) {
-	XmlReader* reader = allocator::new(allocator, XmlReader);
+	XmlReaderImpl* reader = allocator::new(allocator, XmlReaderImpl);
     reader.doc = doc;
 	reader.buffer = allocator::new_array(allocator, char, 2048);
     reader.allocator = allocator;
-    return reader;
+    return (XmlReader*)reader;
 }
 
-fn void XmlReader.free(&self) {
-    if (!self.allocator) return;
+fn void XmlReader.free(&this) {
+    XmlReaderImpl* self = (XmlReaderImpl*)this;
     self.attributeBeingParsed = null;
     self.doc = null;
     self.readHead = 0;
@@ -46,7 +48,8 @@ fn void XmlReader.free(&self) {
     allocator::free(self.allocator, self);
 }
 
-fn void XmlReader.read(&self, char[] slice) {
+fn void XmlReader.read(&this, char[] slice) {
+    XmlReaderImpl* self = (XmlReaderImpl*)this;
 	self.readHead = 0;
 	while (self.readHead < slice.len) {
         char c = self.readChar(slice)!!;
@@ -87,7 +90,7 @@ fn void XmlReader.read(&self, char[] slice) {
 
 // Private Section
 
-fn char! XmlReader.readChar(&self, char[] slice) @private {
+fn char! XmlReaderImpl.readChar(&self, char[] slice) @local {
 	usz readHead = self.readHead;
 	if (readHead >= slice.len){
 		return IoError.EOF?;
@@ -97,7 +100,7 @@ fn char! XmlReader.readChar(&self, char[] slice) @private {
 	return c;
 }	
 
-fn void XmlReader.writeChar(&self, char c) @private {
+fn void XmlReaderImpl.writeChar(&self, char c) @local {
 	usz writeHead = self.writeHead;
     if (writeHead >= self.buffer.len) {
         io::printf("%s\n", self.buffer);
@@ -106,25 +109,25 @@ fn void XmlReader.writeChar(&self, char c) @private {
 	self.writeHead = writeHead + 1;
 }	
 
-fn void XmlReader.push_node(&self, XmlNode* node) @private {
+fn void XmlReaderImpl.push_node(&self, XmlNode* node) @local {
     self.nodesBeingParsed.push(node);
 }
 
-fn void XmlReader.pop_node(&self) @private {
+fn void XmlReaderImpl.pop_node(&self) @local {
     self.nodesBeingParsed.pop()!!;
 }
 
-fn XmlNode* XmlReader.peek_node(&self) @private {
+fn XmlNode* XmlReaderImpl.peek_node(&self) @local {
     return self.nodesBeingParsed.last()!!;
 }
 
-fn void XmlReader.begin_read_tag(&self, char c) @private {
+fn void XmlReaderImpl.begin_read_tag(&self, char c) @local {
 	if (c == '<') {
 		self.state = ReaderState.END_READ_TAG;
 	}
 }
 
-fn void XmlReader.end_read_tag(&self, char c) @private {
+fn void XmlReaderImpl.end_read_tag(&self, char c) @local {
     if (c == '!') {
         // io::print("Parsing comment...\n");
         self.state = ReaderState.READ_COMMENT;
@@ -153,7 +156,7 @@ fn void XmlReader.end_read_tag(&self, char c) @private {
 	}
 }
 
-fn void XmlReader.read_tag_name(&self, char c) @private {
+fn void XmlReaderImpl.read_tag_name(&self, char c) @local {
 	if (c == '/' || c == '>' || c == ' ') {
         XmlNode* nodeBeingParsed = self.peek_node();
         nodeBeingParsed.name = self.copy_write_buffer();
@@ -173,7 +176,7 @@ fn void XmlReader.read_tag_name(&self, char c) @private {
 	}
 }
 
-fn void XmlReader.read_closing_tag(&self, char c) @private {
+fn void XmlReaderImpl.read_closing_tag(&self, char c) @local {
 	if (c == '>') {      
         XmlNode* node = self.peek_node(); 
         self.pop_node();
@@ -182,12 +185,12 @@ fn void XmlReader.read_closing_tag(&self, char c) @private {
 	}
 }
 
-fn void XmlReader.enterReadTextNodeState(&self) @private {
+fn void XmlReaderImpl.enterReadTextNodeState(&self) @local {
     self.writeHead = 0;
     self.state = ReaderState.READ_TEXT_NODE;
 }
 
-fn void XmlReader.read_attribute_name(&self, char c) @private {
+fn void XmlReaderImpl.read_attribute_name(&self, char c) @local {
     if (c == '/') {
         self.state = ReaderState.READ_CLOSING_TAG;
     } else if (c == '>') {
@@ -204,7 +207,7 @@ fn void XmlReader.read_attribute_name(&self, char c) @private {
     }
 }
 
-fn void XmlReader.begin_read_attribute_value(&self, char c) @private {
+fn void XmlReaderImpl.begin_read_attribute_value(&self, char c) @local {
     if (c == ' ') {
         // Skip
     } else if (c == '"') {
@@ -214,14 +217,14 @@ fn void XmlReader.begin_read_attribute_value(&self, char c) @private {
     }
 }
 
-fn char[] XmlReader.copy_write_buffer(&self) @private {
+fn char[] XmlReaderImpl.copy_write_buffer(&self) @local {
     usz strLength = self.writeHead;
     char[] strValue = mem::new_array(char, strLength);
     mem::copy(strValue, self.buffer, strLength);
     return strValue;
 }
 
-fn void XmlReader.end_read_attribute_value(&self, char c) @private {
+fn void XmlReaderImpl.end_read_attribute_value(&self, char c) @local {
 	if (c == '"') {
         self.attributeBeingParsed.value = self.copy_write_buffer();
         XmlNode* nodeBeingParsed = self.peek_node();
@@ -235,13 +238,13 @@ fn void XmlReader.end_read_attribute_value(&self, char c) @private {
     }
 }
 
-fn void XmlReader.read_header(&self, char c) @private {
+fn void XmlReaderImpl.read_header(&self, char c) @local {
 	if (c == '>') {
 		self.state = ReaderState.BEGIN_READ_TAG;
 	}
 }
 
-fn void XmlReader.read_text_node(&self, char c) @private {
+fn void XmlReaderImpl.read_text_node(&self, char c) @local {
 	if (c == '<') {
         if (self.writeHead > 0) {
             char[] textNodeValue = self.copy_write_buffer();
@@ -259,7 +262,7 @@ fn void XmlReader.read_text_node(&self, char c) @private {
     } 
 }
 
-fn void XmlReader.parse_comment(&self, char c) @private {
+fn void XmlReaderImpl.parse_comment(&self, char c) @local {
     self.writeChar(c);
     if (self.writeHead < 3) {
         return;
