@@ -9,11 +9,11 @@ enum ReaderState {
     READ_TAG,
 	READ_TAG_NAME,
     READ_TEXT_NODE,
-    PARSE_CLOSING_TAG,
-    PARSE_ATTRIBUTE_NAME,
-    PARSE_ATTRIBUTE_VALUE,
-    PARSE_ATTRIBUTE_VALUE_INNER,
-    PARSE_COMMENT,
+    READ_CLOSING_TAG,
+    READ_ATTRIBUTE_NAME,
+    READ_ATTRIBUTE_VALUE,
+    READ_ATTRIBUTE_VALUE_INNER,
+    READ_COMMENT,
 }
 
 struct XmlReader {
@@ -67,19 +67,19 @@ fn void XmlReader.read(&self, char[] slice) {
             case READ_TEXT_NODE:
                 self.readTextNode(c);
                 break;
-            case PARSE_CLOSING_TAG:
+            case READ_CLOSING_TAG:
                 self.parseClosingTag(c);
                 break;
-            case PARSE_ATTRIBUTE_NAME:
+            case READ_ATTRIBUTE_NAME:
                 self.parseAttributeName(c);
                 break;
-            case PARSE_ATTRIBUTE_VALUE:
+            case READ_ATTRIBUTE_VALUE:
                 self.parseAttributeValue(c);
                 break;
-            case PARSE_ATTRIBUTE_VALUE_INNER:
+            case READ_ATTRIBUTE_VALUE_INNER:
                 self.parseAttributeValueInner(c);
                 break;
-            case PARSE_COMMENT:
+            case READ_COMMENT:
                 self.parse_comment(c);
                 break;
 		}
@@ -141,11 +141,11 @@ fn void XmlReader.readUntilOpenBrace(&self, char c) @private {
 fn void XmlReader.parseTag(&self, char c) @private {
     if (c == '!') {
         // io::print("Parsing comment...\n");
-        self.state = ReaderState.PARSE_COMMENT;
+        self.state = ReaderState.READ_COMMENT;
     } else if (c == '/') {
 		// signify its a closing tag
         self.writeHead = 0;
-		self.state = ReaderState.PARSE_CLOSING_TAG;
+		self.state = ReaderState.READ_CLOSING_TAG;
 	} else if (c == '?') {
 		self.state = READ_HEADER;
 	} else {
@@ -178,9 +178,9 @@ fn void XmlReader.parseTagName(&self, char c) @private {
         } else if (c == ' ') {
             self.writeHead = 0;
             self.attributeBeingParsed = mem::new(XmlAttribute);
-            self.state = ReaderState.PARSE_ATTRIBUTE_NAME;
+            self.state = ReaderState.READ_ATTRIBUTE_NAME;
         } else if (c == '/') {
-            self.state = ReaderState.PARSE_CLOSING_TAG;
+            self.state = ReaderState.READ_CLOSING_TAG;
         }
 	} else {
 		self.writeChar(c);
@@ -204,7 +204,7 @@ fn void XmlReader.enterReadTextNodeState(&self) @private {
 
 fn void XmlReader.parseAttributeName(&self, char c) @private {
     if (c == '/') {
-        self.state = ReaderState.PARSE_CLOSING_TAG;
+        self.state = ReaderState.READ_CLOSING_TAG;
     } else if (c == '>') {
         //io::print("Encountered closing brace before parsing attribute value?!\n");
         self.enterReadTextNodeState();
@@ -214,7 +214,7 @@ fn void XmlReader.parseAttributeName(&self, char c) @private {
         char[] attributeName = self.copy_write_buffer();
         self.attributeBeingParsed.name = attributeName;
         //io::printf("Attribute Name %s\n", attributeName);
-		self.state = ReaderState.PARSE_ATTRIBUTE_VALUE;
+		self.state = ReaderState.READ_ATTRIBUTE_VALUE;
         self.writeHead = 0;
 	} else {
         self.writeChar(c);
@@ -225,7 +225,7 @@ fn void XmlReader.parseAttributeValue(&self, char c) @private {
     if (c == ' ') {
         // Skip
     } else if (c == '"') {
-        self.state = ReaderState.PARSE_ATTRIBUTE_VALUE_INNER;
+        self.state = ReaderState.READ_ATTRIBUTE_VALUE_INNER;
 	} else {
         io::printf("Encountere unknown character %s\n", c);
     }
@@ -246,7 +246,7 @@ fn void XmlReader.parseAttributeValueInner(&self, char c) @private {
         //io::printf("Attribute Value %s\n", self.attributeBeingParsed.value);
         self.attributeBeingParsed = mem::new(XmlAttribute);
         self.writeHead = 0;
-		self.state = ReaderState.PARSE_ATTRIBUTE_NAME;
+		self.state = ReaderState.READ_ATTRIBUTE_NAME;
 	} else {
         self.writeChar(c);
     }
