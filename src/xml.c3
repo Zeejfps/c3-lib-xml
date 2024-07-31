@@ -25,8 +25,8 @@ struct XmlDoc {
     XmlNode* rootNode;
 }
 
-fn XmlDoc* read_file(File file) {
-    char[] buff = mem::new_array(char, 1024);
+fn XmlDoc*! read_file(File file) {
+    char[] buff = mem::new_array(char, 2048);
 	defer mem::free(buff);
 
     XmlDoc* doc = mem::new(XmlDoc);
@@ -34,7 +34,10 @@ fn XmlDoc* read_file(File file) {
 	defer reader.free();
 
     while (!file.eof()) {
-		usz bytesRead = file.read(buff)!!;
+		usz! bytesRead = file.read(buff);
+        if (catch f = bytesRead) {
+            return f?;
+        }
 		char[] data = buff[0:bytesRead];
 		reader.read(data);
 	}
@@ -60,19 +63,19 @@ fn void free_node(XmlNode* node) @private {
     mem::free(node);
 }
 
-fn void XmlDoc.find_nodes_by_type(&self, char[] type, XmlNodeList* cache) {
+fn void XmlDoc.find_nodes_by_tag_name(&self, char[] type, XmlNodeList* cache) {
     XmlNode* node = self.rootNode;
-    node.find_nodes_by_type(type, cache);
+    node.find_nodes_by_tag_name(type, cache);
 }
 
-fn void XmlNode.find_nodes_by_type(&self, char[] type, XmlNodeList* cache) {
+fn void XmlNode.find_nodes_by_tag_name(&self, char[] type, XmlNodeList* cache) {
     if (self.name == type) {
         cache.push(self);
     }
 
     for (usz i = 0; i < self.children.size; i++) {
         XmlNode* childNode = self.children[i];
-        childNode.find_nodes_by_type(type, cache);
+        childNode.find_nodes_by_tag_name(type, cache);
     }
 }
 
