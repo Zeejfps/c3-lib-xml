@@ -4,9 +4,9 @@ import std::core;
 import std::io;
 
 enum ReaderState {
-	READ_UNTIL_OPEN_BRACE,
+	BEGIN_READ_TAG,
     READ_HEADER,
-    READ_TAG,
+    END_READ_TAG,
 	READ_TAG_NAME,
     READ_TEXT_NODE,
     READ_CLOSING_TAG,
@@ -55,11 +55,11 @@ fn void XmlReader.read(&self, char[] slice) {
 			case READ_HEADER:
 				self.read_header(c);
 				break;
-			case READ_UNTIL_OPEN_BRACE:
-				self.read_until_open_brace(c);
+			case BEGIN_READ_TAG:
+				self.begin_read_tag(c);
 				break;
-			case READ_TAG:
-				self.read_tag(c);
+			case END_READ_TAG:
+				self.end_read_tag(c);
 				break;
             case READ_TAG_NAME:
 				self.read_tag_name(c);
@@ -132,13 +132,13 @@ fn XmlNode* XmlReader.peek_node(&self) {
     return self.nodeStack[self.stackHead];
 }
 
-fn void XmlReader.read_until_open_brace(&self, char c) @private {
+fn void XmlReader.begin_read_tag(&self, char c) @private {
 	if (c == '<') {
-		self.state = ReaderState.READ_TAG;
+		self.state = ReaderState.END_READ_TAG;
 	}
 }
 
-fn void XmlReader.read_tag(&self, char c) @private {
+fn void XmlReader.end_read_tag(&self, char c) @private {
     if (c == '!') {
         // io::print("Parsing comment...\n");
         self.state = ReaderState.READ_COMMENT;
@@ -251,7 +251,7 @@ fn void XmlReader.end_read_attribute_value(&self, char c) @private {
 
 fn void XmlReader.read_header(&self, char c) @private {
 	if (c == '>') {
-		self.state = ReaderState.READ_UNTIL_OPEN_BRACE;
+		self.state = ReaderState.BEGIN_READ_TAG;
 	}
 }
 
@@ -267,7 +267,7 @@ fn void XmlReader.read_text_node(&self, char c) @private {
             nodeBeingParsed.children.push(textNode);
         }
         self.writeHead = 0;
-		self.state = ReaderState.READ_TAG;
+		self.state = ReaderState.END_READ_TAG;
 	} else {
         self.writeChar(c);
     } 
@@ -286,6 +286,6 @@ fn void XmlReader.parse_comment(&self, char c) @private {
     char[] lastThreeChars = self.buffer[self.writeHead-3:3];
 	if (lastThreeChars == "-->") {
         self.writeHead = 0;
-		self.state = ReaderState.READ_UNTIL_OPEN_BRACE;
+		self.state = ReaderState.BEGIN_READ_TAG;
 	}
 }
