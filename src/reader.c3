@@ -263,7 +263,7 @@ fn void XmlReader.readTextNode(&self, char c) @private {
         if (self.writeHead > 0) {
             char[] textNodeValue = self.copy_write_buffer();
             XmlNode* textNode = mem::new(XmlNode);
-            textNode.name = "text";
+            textNode.name = "#text";
             textNode.value = textNodeValue;
             // io::printf("%s\n", textNodeValue);
             XmlNode* nodeBeingParsed = self.peek_node();
