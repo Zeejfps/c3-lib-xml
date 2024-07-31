@@ -5,9 +5,9 @@ import std::io;
 
 enum ReaderState {
 	READ_UNTIL_OPEN_BRACE,
-    PARSE_HEADER,
-    PARSE_TAG,
-	PARSE_TAG_NAME,
+    READ_HEADER,
+    READ_TAG,
+	READ_TAG_NAME,
     READ_TEXT_NODE,
     PARSE_CLOSING_TAG,
     PARSE_ATTRIBUTE_NAME,
@@ -52,16 +52,16 @@ fn void XmlReader.read(&self, char[] slice) {
 	while (self.readHead < slice.len) {
         char c = self.readChar(slice)!!;
 		switch (self.state) {
-			case PARSE_HEADER:
+			case READ_HEADER:
 				self.parseHeader(c);
 				break;
 			case READ_UNTIL_OPEN_BRACE:
 				self.readUntilOpenBrace(c);
 				break;
-			case PARSE_TAG:
+			case READ_TAG:
 				self.parseTag(c);
 				break;
-            case PARSE_TAG_NAME:
+            case READ_TAG_NAME:
 				self.parseTagName(c);
 				break;
             case READ_TEXT_NODE:
@@ -134,7 +134,7 @@ fn XmlNode* XmlReader.peek_node(&self) {
 
 fn void XmlReader.readUntilOpenBrace(&self, char c) @private {
 	if (c == '<') {
-		self.state = ReaderState.PARSE_TAG;
+		self.state = ReaderState.READ_TAG;
 	}
 }
 
@@ -147,7 +147,7 @@ fn void XmlReader.parseTag(&self, char c) @private {
         self.writeHead = 0;
 		self.state = ReaderState.PARSE_CLOSING_TAG;
 	} else if (c == '?') {
-		self.state = PARSE_HEADER;
+		self.state = READ_HEADER;
 	} else {
 
         //io::print("Pushing node: ");
@@ -163,7 +163,7 @@ fn void XmlReader.parseTag(&self, char c) @private {
 
         self.push_node(child);
 
-        self.state = ReaderState.PARSE_TAG_NAME;
+        self.state = ReaderState.READ_TAG_NAME;
 	}
 }
 
@@ -270,7 +270,7 @@ fn void XmlReader.readTextNode(&self, char c) @private {
             nodeBeingParsed.children.push(textNode);
         }
         self.writeHead = 0;
-		self.state = ReaderState.PARSE_TAG;
+		self.state = ReaderState.READ_TAG;
 	} else {
         self.writeChar(c);
     } 
