@@ -10,14 +10,14 @@ fault XmlFault {
 }
 
 struct XmlAttribute {
-	char[] name;
-	char[] value;
+	String name;
+	String value;
     Allocator allocator;
 }
 
 struct XmlNode {
-	char[] name;
-	char[] value;
+	String name;
+	String value;
 	XmlAttributeList attributes;
 	XmlNodeList children;
     Allocator allocator;
