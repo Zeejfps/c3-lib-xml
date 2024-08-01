@@ -56,34 +56,24 @@ fn void XmlReader.read(&this, char[] slice) {
 		switch (self.state) {
 			case READ_HEADER:
 				self.read_header(c);
-				break;
 			case BEGIN_READ_TAG:
 				self.begin_read_tag(c);
-				break;
 			case END_READ_TAG:
 				self.end_read_tag(c);
-				break;
 			case READ_TAG_NAME:
 				self.read_tag_name(c);
-				break;
 			case READ_TEXT_NODE:
 				self.read_text_node(c);
-				break;
 			case READ_CLOSING_TAG:
 				self.read_closing_tag(c);
-				break;
 			case READ_ATTRIBUTE_NAME:
 				self.read_attribute_name(c);
-				break;
 			case BEGIN_READ_ATTRIBUTE_VALUE:
 				self.begin_read_attribute_value(c);
-				break;
 			case END_READ_ATTRIBUTE_VALUE:
 				self.end_read_attribute_value(c);
-				break;
 			case READ_COMMENT:
 				self.parse_comment(c);
-				break;
 		}
 	}
 }
