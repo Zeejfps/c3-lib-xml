@@ -45,24 +45,6 @@ fn void printNode(File outFile, XmlNode* node, int depth, usz childIndex, usz ch
 		}
 	}
 
-	
-	// if (depth > 0) {
-		
-		// if (node.children.size > 0) {
-		// 	//io::print("+");
-		// 	//io::fprint(stream, "+")!!;
-		// } else {
-		// 	//io::print("-");
-		// 	io::fprint(stream, "─")!!;
-		// }
-
-		// if (childIndex < childCount - 1) {
-		// 	io::print("+ ");
-		// } else {
-		// 	io::print(" -");
-		// }
-	// }
-
 	//io::printf("%s", node.name, node.attributes.size);
 	io::fprintf(stream, "%s", node.name, node.attributes.size)!!;
 	for (usz i = 0; i < node.attributes.size; i++) {
