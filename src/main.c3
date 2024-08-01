@@ -2,24 +2,10 @@ import std::io;
 import std::core;
 import env::xml;
 
-fn int main(String[] args)
+fn void main(String[] args)
 {
 	File xmlFile = io::file::open("test/test.xml", "r")!!;
 	File outFile = io::file::open("test/out.txt", "w")!!;
-	
-	// char[] buff = mem::new_array(char, 1024);
-	// defer mem::free(buff);
-
-	// XmlDoc testDoc;
-	// XmlReader* reader = xml::new_reader(&testDoc);
-	// defer reader.free();
-
-	// while (!xmlFile.eof()) {
-	// 	usz bytesRead = xmlFile.read(buff)!!;
-	// 	char[] data = buff[0:bytesRead];
-	// 	//io::printf("bytes read: %d\n", slice.len);
-	// 	reader.read(data);
-	// }
 
 	XmlDoc* doc = xml::read_file(xmlFile)!!;
 	defer doc.free();
@@ -39,14 +25,7 @@ fn int main(String[] args)
 		io::printf("Id %s\n", id);
 	}
 
-	for (usz i = 0; i < doc.rootNode.children.size; i++) {
-		XmlNode* child = doc.rootNode.children[i];
-		printNode(outFile, child, 0, i, doc.rootNode.children.size);
-	}
-
-	//io::print("Done!\n");
-
-	return 0;
+	printNode(outFile, doc.rootNode, 0, 0, doc.rootNode.children.size);
 }
 
 fn void printNode(File outFile, XmlNode* node, int depth, usz childIndex, usz childCount) {
@@ -55,7 +34,7 @@ fn void printNode(File outFile, XmlNode* node, int depth, usz childIndex, usz ch
 
 	for (int i = 0; i < depth; i++) {
 		//io::print("|");
-		io::fprint(stream, "|")!!;
+		io::fprintf(stream, "%c", '├')!!;
 	}
 	// if (depth > 0) {
 		
