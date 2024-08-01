@@ -58,10 +58,10 @@ fn void free_node(XmlNode* node) @private {
 	if (node == null) {
 		return;
 	}
-	for (usz i = 0; i < node.children.size; i++) {
-		XmlNode* child = node.children[i];
+    foreach(child : node.children) {
 		free_node(child);
-	}
+    }
+
 	node.children.free();
 	node.attributes.free();
 	mem::free(node);
