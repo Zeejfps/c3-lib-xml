@@ -6,10 +6,10 @@ import std::io;
 distinct XmlReader = void;
 
 enum ReaderState @local {
-	BEGIN_READ_TAG,
+    BEGIN_READ_TAG,
     READ_HEADER,
     END_READ_TAG,
-	READ_TAG_NAME,
+    READ_TAG_NAME,
     READ_TEXT_NODE,
     READ_CLOSING_TAG,
     READ_ATTRIBUTE_NAME,
@@ -19,9 +19,9 @@ enum ReaderState @local {
 }
 
 struct XmlReaderImpl @local {
-	ReaderState state;
-	usz readHead;
-	usz writeHead;
+    ReaderState state;
+    usz readHead;
+    usz writeHead;
     char[] buffer;
     Allocator allocator;
     XmlDoc* doc;
@@ -30,9 +30,9 @@ struct XmlReaderImpl @local {
 }
 
 fn XmlReader* new_reader(XmlDoc* doc, Allocator allocator = allocator::heap()) {
-	XmlReaderImpl* reader = allocator::new(allocator, XmlReaderImpl);
+    XmlReaderImpl* reader = allocator::new(allocator, XmlReaderImpl);
     reader.doc = doc;
-	reader.buffer = allocator::new_array(allocator, char, 2048);
+    reader.buffer = allocator::new_array(allocator, char, 2048);
     reader.allocator = allocator;
     return (XmlReader*)reader;
 }
