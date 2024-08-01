@@ -34,6 +34,7 @@ fn XmlReader* new_reader(XmlDoc* doc, Allocator allocator = allocator::heap()) {
 	reader.doc = doc;
 	reader.buffer = allocator::new_array(allocator, char, 2048);
 	reader.allocator = allocator;
+    reader.state = BEGIN_READ_TAG;
 	return (XmlReader*)reader;
 }
 
@@ -93,6 +94,7 @@ fn char! XmlReaderImpl.readChar(&self, char[] slice) @local {
 fn void XmlReaderImpl.writeChar(&self, char c) @local {
 	usz writeHead = self.writeHead;
 	if (writeHead >= self.buffer.len) {
+        // TODO: Really need to properly handle the error here
 		io::printf("%s\n", self.buffer);
 	}
 	self.buffer[writeHead] = c;
@@ -119,17 +121,13 @@ fn void XmlReaderImpl.begin_read_tag(&self, char c) @local {
 
 fn void XmlReaderImpl.end_read_tag(&self, char c) @local {
 	if (c == '!') {
-		// io::print("Parsing comment...\n");
 		self.state = ReaderState.READ_COMMENT;
 	} else if (c == '/') {
-		// signify its a closing tag
 		self.writeHead = 0;
 		self.state = ReaderState.READ_CLOSING_TAG;
 	} else if (c == '?') {
 		self.state = READ_HEADER;
 	} else {
-
-		//io::print("Pushing node: ");
 		self.writeHead = 0;
 		self.writeChar(c);
 		XmlNode* child = mem::new(XmlNode);
@@ -139,9 +137,7 @@ fn void XmlReaderImpl.end_read_tag(&self, char c) @local {
 			XmlNode* nodeBeingParsed = self.peek_node();
 			nodeBeingParsed.children.push(child);
 		}
-
 		self.push_node(child);
-
 		self.state = ReaderState.READ_TAG_NAME;
 	}
 }
@@ -150,7 +146,6 @@ fn void XmlReaderImpl.read_tag_name(&self, char c) @local {
 	if (c == '/' || c == '>' || c == ' ') {
 		XmlNode* nodeBeingParsed = self.peek_node();
 		nodeBeingParsed.name = self.copy_write_buffer();
-		//io::printf("%s\n", nodeBeingParsed.name);
 		if (c == '>') {
 			self.writeHead = 0;
 			self.state = ReaderState.READ_TEXT_NODE;
@@ -199,7 +194,7 @@ fn void XmlReaderImpl.read_attribute_name(&self, char c) @local {
 
 fn void XmlReaderImpl.begin_read_attribute_value(&self, char c) @local {
 	if (c == ' ') {
-		// Skip
+		// Skip space
 	} else if (c == '"') {
 		self.state = ReaderState.END_READ_ATTRIBUTE_VALUE;
 	} else {
@@ -219,7 +214,6 @@ fn void XmlReaderImpl.end_read_attribute_value(&self, char c) @local {
 		self.attributeBeingParsed.value = self.copy_write_buffer();
 		XmlNode* nodeBeingParsed = self.peek_node();
 		nodeBeingParsed.attributes.push(self.attributeBeingParsed);
-		//io::printf("Attribute Value %s\n", self.attributeBeingParsed.value);
 		self.attributeBeingParsed = mem::new(XmlAttribute);
 		self.writeHead = 0;
 		self.state = ReaderState.READ_ATTRIBUTE_NAME;
@@ -241,7 +235,6 @@ fn void XmlReaderImpl.read_text_node(&self, char c) @local {
 			XmlNode* textNode = mem::new(XmlNode);
 			textNode.name = "#text";
 			textNode.value = textNodeValue;
-			// io::printf("%s\n", textNodeValue);
 			XmlNode* nodeBeingParsed = self.peek_node();
 			nodeBeingParsed.children.push(textNode);
 		}
