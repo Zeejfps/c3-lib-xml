@@ -25,26 +25,36 @@ fn void main(String[] args)
 		io::printf("Id %s\n", id);
 	}
 
-	printNode(outFile, doc.rootNode, 0, 0, doc.rootNode.children.size);
+	printNode(outFile, doc.rootNode, 0, 0, 0);
 }
 
 fn void printNode(File outFile, XmlNode* node, int depth, usz childIndex, usz childCount) {
 
 	OutStream stream = (OutStream)&outFile;
 
-	for (int i = 0; i < depth; i++) {
+	for (int i = 0; i < depth - 1; i++) {
 		//io::print("|");
-		io::fprintf(stream, "%c", '├')!!;
+		io::fprintf(stream, "%c", '│')!!;
 	}
+
+	if (childCount > 0) {
+		if(childIndex == childCount - 1) {
+			io::fprintf(stream, "%c", '└')!!;
+		} else {
+			io::fprintf(stream, "%c", '├')!!;
+		}
+	}
+
+	
 	// if (depth > 0) {
 		
-		if (node.children.size > 0) {
-			//io::print("+");
-			io::fprint(stream, "+")!!;
-		} else {
-			//io::print("-");
-			io::fprint(stream, "-")!!;
-		}
+		// if (node.children.size > 0) {
+		// 	//io::print("+");
+		// 	//io::fprint(stream, "+")!!;
+		// } else {
+		// 	//io::print("-");
+		// 	io::fprint(stream, "─")!!;
+		// }
 
 		// if (childIndex < childCount - 1) {
 		// 	io::print("+ ");
