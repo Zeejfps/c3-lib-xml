@@ -2,7 +2,7 @@ module env::xml;
 import std::io;
 import std::collections;
 
-def XmlNodeAttributes = List(<XmlAttribute*>);
+def XmlAttributeList = List(<XmlAttribute*>);
 def XmlNodeList = List(<XmlNode*>);
 
 fault XmlFault {
@@ -18,7 +18,7 @@ struct XmlAttribute {
 struct XmlNode {
 	char[] name;
 	char[] value;
-	XmlNodeAttributes attributes;
+	XmlAttributeList attributes;
 	XmlNodeList children;
     Allocator allocator;
 }
