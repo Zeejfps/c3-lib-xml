@@ -16,8 +16,8 @@ struct XmlAttribute {
 }
 
 struct XmlNode {
-	char[] name;
-	char[] value;
+	String name;
+	String value;
 	XmlNodeAttributes attributes;
 	XmlNodeList children;
     Allocator allocator;
@@ -94,5 +94,12 @@ fn void XmlNode.free(&node) @private {
 
 	node.children.free();
 	node.attributes.free();
-	allocator::free(node.allocator, node);
+    
+    //node.name.free();
+    io::printf("%s\n", node.name);
+    node.name.free(node.allocator);
+
+    //node.value.free();
+
+	//allocator::free(node.allocator, node);
 }

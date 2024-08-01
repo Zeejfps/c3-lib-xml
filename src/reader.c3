@@ -157,7 +157,7 @@ fn XmlAttribute* XmlReaderImpl.create_attribute(&self) @local {
 fn void XmlReaderImpl.read_tag_name(&self, char c) @local {
 	if (c == '/' || c == '>' || c == ' ') {
 		XmlNode* nodeBeingParsed = self.peek_node();
-		nodeBeingParsed.name = self.copy_write_buffer();
+		nodeBeingParsed.name =(String)self.copy_write_buffer();
 		if (c == '>') {
 			self.writeHead = 0;
 			self.state = ReaderState.READ_TEXT_NODE;
@@ -214,11 +214,12 @@ fn void XmlReaderImpl.begin_read_attribute_value(&self, char c) @local {
 	}
 }
 
-fn char[] XmlReaderImpl.copy_write_buffer(&self) @local {
+fn String XmlReaderImpl.copy_write_buffer(&self) @local {
 	usz strLength = self.writeHead;
-	char[] strValue = mem::new_array(char, strLength);
+	char* strValue = allocator::malloc(self.allocator, strLength+1);
 	mem::copy(strValue, self.buffer, strLength);
-	return strValue;
+    strValue[strLength]=0;
+	return (String)strValue[:strLength];
 }
 
 fn void XmlReaderImpl.end_read_attribute_value(&self, char c) @local {
@@ -246,7 +247,7 @@ fn void XmlReaderImpl.read_text_node(&self, char c) @local {
 			char[] textNodeValue = self.copy_write_buffer();
 			XmlNode* textNode = self.create_node();
 			textNode.name = "#text";
-			textNode.value = textNodeValue;
+			textNode.value = (String)textNodeValue;
 			XmlNode* nodeBeingParsed = self.peek_node();
 			nodeBeingParsed.children.push(textNode);
 		}
