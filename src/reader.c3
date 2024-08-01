@@ -149,7 +149,8 @@ fn XmlNode* XmlReaderImpl.create_node(&self) @local {
 }
 
 fn XmlAttribute* XmlReaderImpl.create_attribute(&self) @local {
-    XmlAttribute* attribute = mem::new(XmlAttribute);
+    XmlAttribute* attribute = allocator::new(self.allocator, XmlAttribute);
+    attribute.allocator = self.allocator;
     return attribute;
 }
 

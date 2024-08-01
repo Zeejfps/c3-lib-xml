@@ -12,6 +12,7 @@ fault XmlFault {
 struct XmlAttribute {
 	char[] name;
 	char[] value;
+    Allocator allocator;
 }
 
 struct XmlNode {
