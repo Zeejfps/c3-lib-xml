@@ -142,10 +142,15 @@ fn void XmlReaderImpl.end_read_tag(&self, char c) @local {
 	}
 }
 
-fn XmlNode* XmlReaderImpl.create_node(&self) {
+fn XmlNode* XmlReaderImpl.create_node(&self) @local {
     XmlNode* node = allocator::new(self.allocator, XmlNode);
     node.allocator = self.allocator;
     return node;
+}
+
+fn XmlAttribute* XmlReaderImpl.create_attribute(&self) @local {
+    XmlAttribute* attribute = mem::new(XmlAttribute);
+    return attribute;
 }
 
 fn void XmlReaderImpl.read_tag_name(&self, char c) @local {
@@ -157,7 +162,7 @@ fn void XmlReaderImpl.read_tag_name(&self, char c) @local {
 			self.state = ReaderState.READ_TEXT_NODE;
 		} else if (c == ' ') {
 			self.writeHead = 0;
-			self.attributeBeingParsed = mem::new(XmlAttribute);
+			self.attributeBeingParsed = self.create_attribute();
 			self.state = ReaderState.READ_ATTRIBUTE_NAME;
 		} else if (c == '/') {
 			self.state = ReaderState.READ_CLOSING_TAG;
@@ -220,7 +225,7 @@ fn void XmlReaderImpl.end_read_attribute_value(&self, char c) @local {
 		self.attributeBeingParsed.value = self.copy_write_buffer();
 		XmlNode* nodeBeingParsed = self.peek_node();
 		nodeBeingParsed.attributes.push(self.attributeBeingParsed);
-		self.attributeBeingParsed = mem::new(XmlAttribute);
+		self.attributeBeingParsed = self.create_attribute();
 		self.writeHead = 0;
 		self.state = ReaderState.READ_ATTRIBUTE_NAME;
 	} else {
