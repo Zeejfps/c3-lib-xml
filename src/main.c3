@@ -7,7 +7,9 @@ fn void main(String[] args)
 	File xmlFile = io::file::open("test/test.xml", "r")!!;
 	File outFile = io::file::open("test/out.txt", "w")!!;
 
-	XmlDoc* doc = xml::read_file(xmlFile)!!;
+	TrackingAllocator tracker;
+	tracker.init(allocator::heap());
+	XmlDoc* doc = xml::read_file(xmlFile, &tracker)!!;
 	defer doc.free();
 	io::printf("Is NUll: %b\n", doc.rootNode == null);
 
