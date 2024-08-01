@@ -19,6 +19,7 @@ struct XmlNode {
 	char[] value;
 	XmlNodeAttributes attributes;
 	XmlNodeList children;
+    Allocator allocator;
 }
 
 struct XmlDoc {
@@ -50,21 +51,8 @@ fn XmlDoc*! read_file(File file, Allocator allocator = allocator::heap()) {
 
 fn void XmlDoc.free(&self) {
 	if (!self.allocator) return;
-	free_node(self.rootNode);
+	self.rootNode.free();
 	allocator::free(self.allocator, self);
-}
-
-fn void free_node(XmlNode* node) @private {
-	if (node == null) {
-		return;
-	}
-    foreach(child : node.children) {
-		free_node(child);
-    }
-
-	node.children.free();
-	node.attributes.free();
-	mem::free(node);
 }
 
 fn void XmlDoc.find_nodes_by_tag_name(&self, char[] type, XmlNodeList* cache) {
@@ -91,4 +79,19 @@ fn char[]! XmlNode.get_attrib_value(&self, char[] name) {
 		}
 	}
 	return XmlFault.ATTRIBUTE_NOT_FOUND?;
+}
+
+fn void XmlNode.free(&node) @private {
+	if (node.allocator == null) {
+		return;
+	}
+
+    // NOTE(Zee): Does it make sense for the node to free its own children?
+    foreach(child : node.children) {
+		child.free();
+    }
+
+	node.children.free();
+	node.attributes.free();
+	allocator::free(node.allocator, node);
 }

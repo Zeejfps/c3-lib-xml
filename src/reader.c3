@@ -130,7 +130,7 @@ fn void XmlReaderImpl.end_read_tag(&self, char c) @local {
 	} else {
 		self.writeHead = 0;
 		self.writeChar(c);
-		XmlNode* child = mem::new(XmlNode);
+		XmlNode* child = self.create_node();
 		if (self.doc.rootNode == null) {
 			self.doc.rootNode = child;
 		} else {
@@ -140,6 +140,12 @@ fn void XmlReaderImpl.end_read_tag(&self, char c) @local {
 		self.push_node(child);
 		self.state = ReaderState.READ_TAG_NAME;
 	}
+}
+
+fn XmlNode* XmlReaderImpl.create_node(&self) {
+    XmlNode* node = allocator::new(self.allocator, XmlNode);
+    node.allocator = self.allocator;
+    return node;
 }
 
 fn void XmlReaderImpl.read_tag_name(&self, char c) @local {
@@ -232,7 +238,7 @@ fn void XmlReaderImpl.read_text_node(&self, char c) @local {
 	if (c == '<') {
 		if (self.writeHead > 0) {
 			char[] textNodeValue = self.copy_write_buffer();
-			XmlNode* textNode = mem::new(XmlNode);
+			XmlNode* textNode = self.create_node();
 			textNode.name = "#text";
 			textNode.value = textNodeValue;
 			XmlNode* nodeBeingParsed = self.peek_node();
