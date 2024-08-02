@@ -72,9 +72,9 @@ fn void XmlNode.free(&node) {
 
 	node.children.free();
 	node.attributes.free();
-	node.name.free();
-	node.value.free();
-	
+	node.name.free(node.allocator);
+	node.value.free(node.allocator);
+
     // TODO: Free Name and Value
 	allocator::free(node.allocator, node);
 }

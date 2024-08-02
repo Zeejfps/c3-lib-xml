@@ -218,7 +218,7 @@ fn void XmlReaderImpl.begin_read_attribute_value(&self, char c) @local {
 fn String XmlReaderImpl.copy_write_buffer(&self) @local {
 	usz strLength = self.writeHead;
 	char[] strValue = allocator::new_array(self.allocator, char, strLength);
-	mem::copy(strValue, self.buffer, strLength);
+	strValue[..] = self.buffer[:strLength];
 	return (String)strValue;
 }
 
