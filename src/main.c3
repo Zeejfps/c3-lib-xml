@@ -58,7 +58,7 @@ fn void printNode(File outFile, XmlNode* node, int depth, usz childIndex, usz ch
 		String trimmed = v.trim();
 		if (trimmed.len > 0) {
 			// io::printf(" Value: %s", trimmed);
-			io::fprintf(stream, " Value: %s", trimmed)!!;
+			io::fprintf(stream, " \"%s\"", trimmed)!!;
 		}
 	}
 
