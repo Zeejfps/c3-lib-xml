@@ -25,15 +25,13 @@ fn void main(String[] args)
 		io::printf("Id %s\n", id);
 	}
 
-	printNode(outFile, doc.rootNode, 0, 0, 0);
+	OutStream stream = (OutStream)&outFile;
+	printNode(stream, doc.rootNode, 0, 0, 0);
 }
 
-fn void printNode(File outFile, XmlNode* node, int depth, usz childIndex, usz childCount) {
-
-	OutStream stream = (OutStream)&outFile;
+fn void printNode(OutStream stream, XmlNode* node, int depth, usz childIndex, usz childCount) {
 
 	for (int i = 0; i < depth - 1; i++) {
-		//io::print("|");
 		io::fprintf(stream, "%c", '│')!!;
 	}
 
@@ -45,11 +43,9 @@ fn void printNode(File outFile, XmlNode* node, int depth, usz childIndex, usz ch
 		}
 	}
 
-	//io::printf("%s", node.name, node.attributes.size);
 	io::fprintf(stream, "%s", node.name, node.attributes.size)!!;
 	for (usz i = 0; i < node.attributes.size; i++) {
 		XmlAttribute* attribute = node.attributes[i];
-		//io::printf(", %s=\"%s\"", attribute.name, attribute.value);
 		io::fprintf(stream, ", %s=\"%s\"", attribute.name, attribute.value)!!;
 	}
 
@@ -57,17 +53,15 @@ fn void printNode(File outFile, XmlNode* node, int depth, usz childIndex, usz ch
 		String v = (String)node.value;
 		String trimmed = v.trim();
 		if (trimmed.len > 0) {
-			// io::printf(" Value: %s", trimmed);
 			io::fprintf(stream, " \"%s\"", trimmed)!!;
 		}
 	}
 
 	io::fprint(stream, "\n")!!;
-	//io::printf("\n");
 
 	depth = depth + 1;
 	for (usz i = 0; i < node.children.size; i++) {
 		XmlNode* child = node.children[i];
-		printNode(outFile, child, depth, i, node.children.size);
+		printNode(stream, child, depth, i, node.children.size);
 	}
 }
