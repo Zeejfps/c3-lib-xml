@@ -8,7 +8,6 @@ File xmlFile = io::file::open("test/test.xml", "r")!!;
 
 XmlDoc* doc = xml::read_file(xmlFile)!!;
 defer doc.free();
-io::printf("Is NUll: %b\n", doc.rootNode == null);
 
 XmlNodeList bookNodes;
 defer bookNodes.free();
