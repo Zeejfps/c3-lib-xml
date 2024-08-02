@@ -7,9 +7,9 @@ fn void main(String[] args)
 	File xmlFile = io::file::open("test/test.xml", "r")!!;
 	File outFile = io::file::open("test/out.txt", "w")!!;
 
-	XmlDoc* doc = xml::read_file(xmlFile)!!;
+	IXmlDoc doc = xml::read_file(xmlFile)!!;
 	defer doc.free();
-	io::printf("Is NUll: %b\n", doc.rootNode == null);
+	io::printf("Is NUll: %b\n", doc.get_root_node() == null);
 
 	XmlNodeList bookNodes;
 	defer bookNodes.free();
@@ -26,7 +26,7 @@ fn void main(String[] args)
 	}
 
 	OutStream stream = (OutStream)&outFile;
-	printNode(stream, doc.rootNode, 0, 0, 0);
+	printNode(stream, doc.get_root_node(), 0, 0, 0);
 }
 
 fn void printNode(OutStream stream, XmlNode* node, int depth, usz childIndex, usz childCount) {
