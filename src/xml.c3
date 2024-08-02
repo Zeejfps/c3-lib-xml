@@ -56,6 +56,39 @@ fn void XmlDoc.free(&self) {
 	allocator::free(self.allocator, self);
 }
 
+fn void XmlNode.free(&node) {
+	if (node.allocator == null) {
+		return;
+	}
+
+    // NOTE(Zee): Does it make sense for the node to free its own children?
+    foreach(child : node.children) {
+		child.free();
+    }
+
+    foreach(attribute : node.attributes) {
+        attribute.free();
+    }
+
+	node.children.free();
+	node.attributes.free();
+	node.name.free();
+	node.value.free();
+	
+    // TODO: Free Name and Value
+	allocator::free(node.allocator, node);
+}
+
+fn void XmlAttribute.free(&self) {
+	if (self.allocator == null) {
+		return;
+	}
+	self.name.free();
+	self.value.free();
+    // TODO: Free Name and Value;
+	allocator::free(self.allocator, self);
+}
+
 fn void XmlDoc.find_nodes_by_tag_name(&self, char[] type, XmlNodeList* cache) {
 	XmlNode* node = self.rootNode;
 	node.find_nodes_by_tag_name(type, cache);
@@ -80,33 +113,4 @@ fn char[]! XmlNode.get_attrib_value(&self, char[] name) {
 		}
 	}
 	return XmlFault.ATTRIBUTE_NOT_FOUND?;
-}
-
-fn void XmlNode.free(&node) {
-	if (node.allocator == null) {
-		return;
-	}
-
-    // NOTE(Zee): Does it make sense for the node to free its own children?
-    foreach(child : node.children) {
-		child.free();
-    }
-
-    foreach(attribute : node.attributes) {
-        attribute.free();
-    }
-
-	node.children.free();
-	node.attributes.free();
-
-    // TODO: Free Name and Value
-	allocator::free(node.allocator, node);
-}
-
-fn void XmlAttribute.free(&self) {
-	if (self.allocator == null) {
-		return;
-	}
-    // TODO: Free Name and Value;
-	allocator::free(self.allocator, self);
 }

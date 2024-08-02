@@ -3,6 +3,8 @@ module env::xml;
 import std::core;
 import std::io;
 
+const char[] TEXT_NODE_NAME = "#text";
+
 distinct XmlReader = void;
 
 enum ReaderState @local {
@@ -215,7 +217,7 @@ fn void XmlReaderImpl.begin_read_attribute_value(&self, char c) @local {
 
 fn String XmlReaderImpl.copy_write_buffer(&self) @local {
 	usz strLength = self.writeHead;
-	char[] strValue = mem::new_array(char, strLength);
+	char[] strValue = allocator::new_array(self.allocator, char, strLength);
 	mem::copy(strValue, self.buffer, strLength);
 	return (String)strValue;
 }
@@ -243,7 +245,7 @@ fn void XmlReaderImpl.read_text_node(&self, char c) @local {
 	if (c == '<') {
 		if (self.writeHead > 0) {
 			XmlNode* textNode = self.create_node();
-			textNode.name = "#text";
+			textNode.name = string::new_format("%s", TEXT_NODE_NAME, self.allocator);
 			textNode.value = self.copy_write_buffer();
 			XmlNode* nodeBeingParsed = self.peek_node();
 			nodeBeingParsed.children.push(textNode);
