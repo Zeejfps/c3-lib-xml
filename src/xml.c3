@@ -83,8 +83,8 @@ fn void XmlAttribute.free(&self) {
 	if (self.allocator == null) {
 		return;
 	}
-	self.name.free();
-	self.value.free();
+	self.name.free(self.allocator);
+	self.value.free(self.allocator);
     // TODO: Free Name and Value;
 	allocator::free(self.allocator, self);
 }
