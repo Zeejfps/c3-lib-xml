@@ -36,7 +36,7 @@ fn XmlReader* new_reader(XmlDoc* doc, Allocator allocator = allocator::heap()) {
 	reader.doc = doc;
 	reader.buffer = allocator::new_array(allocator, char, 2048);
 	reader.allocator = allocator;
-    reader.state = BEGIN_READ_TAG;
+	reader.state = BEGIN_READ_TAG;
 	return (XmlReader*)reader;
 }
 
@@ -96,7 +96,7 @@ fn char! XmlReaderImpl.readChar(&self, char[] slice) @local {
 fn void XmlReaderImpl.writeChar(&self, char c) @local {
 	usz writeHead = self.writeHead;
 	if (writeHead >= self.buffer.len) {
-        // TODO: Really need to properly handle the error here
+		// TODO: Really need to properly handle the error here
 		io::printf("%s\n", self.buffer);
 	}
 	self.buffer[writeHead] = c;
@@ -145,15 +145,15 @@ fn void XmlReaderImpl.end_read_tag(&self, char c) @local {
 }
 
 fn XmlNode* XmlReaderImpl.create_node(&self) @local {
-    XmlNode* node = allocator::new(self.allocator, XmlNode);
-    node.allocator = self.allocator;
-    return node;
+	XmlNode* node = allocator::new(self.allocator, XmlNode);
+	node.allocator = self.allocator;
+	return node;
 }
 
 fn XmlAttribute* XmlReaderImpl.create_attribute(&self) @local {
-    XmlAttribute* attribute = allocator::new(self.allocator, XmlAttribute);
-    attribute.allocator = self.allocator;
-    return attribute;
+	XmlAttribute* attribute = allocator::new(self.allocator, XmlAttribute);
+	attribute.allocator = self.allocator;
+	return attribute;
 }
 
 fn void XmlReaderImpl.read_tag_name(&self, char c) @local {

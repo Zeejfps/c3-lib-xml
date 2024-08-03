@@ -12,7 +12,7 @@ fault XmlFault {
 struct XmlAttribute {
 	String name;
 	String value;
-    Allocator allocator;
+	Allocator allocator;
 }
 
 struct XmlNode {
@@ -20,7 +20,7 @@ struct XmlNode {
 	String value;
 	XmlAttributeList attributes;
 	XmlNodeList children;
-    Allocator allocator;
+	Allocator allocator;
 }
 
 struct XmlDoc {
@@ -61,21 +61,21 @@ fn void XmlNode.free(&node) {
 		return;
 	}
 
-    // NOTE(Zee): Does it make sense for the node to free its own children?
-    foreach(child : node.children) {
+	// NOTE(Zee): Does it make sense for the node to free its own children?
+	foreach(child : node.children) {
 		child.free();
-    }
+	}
 
-    foreach(attribute : node.attributes) {
-        attribute.free();
-    }
+	foreach(attribute : node.attributes) {
+		attribute.free();
+	}
 
 	node.children.free();
 	node.attributes.free();
 	node.name.free(node.allocator);
 	node.value.free(node.allocator);
 
-    // TODO: Free Name and Value
+	// TODO: Free Name and Value
 	allocator::free(node.allocator, node);
 }
 
@@ -85,7 +85,7 @@ fn void XmlAttribute.free(&self) {
 	}
 	self.name.free(self.allocator);
 	self.value.free(self.allocator);
-    // TODO: Free Name and Value;
+	// TODO: Free Name and Value;
 	allocator::free(self.allocator, self);
 }
 
