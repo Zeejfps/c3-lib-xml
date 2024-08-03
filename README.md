@@ -5,6 +5,7 @@ import std::core;
 import xml;
 
 File xmlFile = io::file::open("test/test.xml", "r")!!;
+defer xmlFile.close()!!;
 
 XmlDoc* doc = xml::read_file(xmlFile)!!;
 defer doc.free();
