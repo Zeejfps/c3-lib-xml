@@ -2,7 +2,7 @@ Example usage
 ```C
 import std::io;
 import std::core;
-import env::xml;
+import xml;
 
 File xmlFile = io::file::open("test/test.xml", "r")!!;
 

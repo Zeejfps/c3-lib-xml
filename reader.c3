@@ -1,4 +1,4 @@
-module env::xml;
+module xml;
 
 import std::core;
 import std::io;
