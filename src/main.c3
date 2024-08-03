@@ -26,42 +26,5 @@ fn void main(String[] args)
 	}
 
 	OutStream stream = (OutStream)&outFile;
-	printNode(stream, doc.rootNode, 0, 0, 0);
-}
-
-fn void printNode(OutStream stream, XmlNode* node, int depth, usz childIndex, usz childCount) {
-
-	for (int i = 0; i < depth - 1; i++) {
-		io::fprintf(stream, "%c", '│')!!;
-	}
-
-	if (childCount > 0) {
-		if(childIndex == childCount - 1) {
-			io::fprintf(stream, "%c", '└')!!;
-		} else {
-			io::fprintf(stream, "%c", '├')!!;
-		}
-	}
-
-	io::fprintf(stream, "%s", node.name, node.attributes.size)!!;
-	for (usz i = 0; i < node.attributes.size; i++) {
-		XmlAttribute* attribute = node.attributes[i];
-		io::fprintf(stream, ", %s=\"%s\"", attribute.name, attribute.value)!!;
-	}
-
-	if (node.value.len > 0) {
-		String v = (String)node.value;
-		String trimmed = v.trim();
-		if (trimmed.len > 0) {
-			io::fprintf(stream, " \"%s\"", trimmed)!!;
-		}
-	}
-
-	io::fprint(stream, "\n")!!;
-
-	depth = depth + 1;
-	for (usz i = 0; i < node.children.size; i++) {
-		XmlNode* child = node.children[i];
-		printNode(stream, child, depth, i, node.children.size);
-	}
+	doc.print_as_tree(stream);
 }
