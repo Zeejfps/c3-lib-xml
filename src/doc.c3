@@ -116,10 +116,10 @@ fn char[]! XmlNode.get_attrib_value(&self, char[] name) {
 }
 
 fn void XmlDoc.print_as_tree(&doc, OutStream stream) {
-	print_node(stream, doc.rootNode, 0, 0, 0);
+	doc.rootNode.print_as_tree(stream, 0, 0, 0);
 }
 
-fn void print_node(OutStream stream, XmlNode* node, int depth, usz childIndex, usz childCount) {
+fn void XmlNode.print_as_tree(&node, OutStream stream, int depth, usz childIndex, usz childCount) {
 
 	for (int i = 0; i < depth - 1; i++) {
 		io::fprintf(stream, "%c", '│')!!;
@@ -152,6 +152,6 @@ fn void print_node(OutStream stream, XmlNode* node, int depth, usz childIndex, u
 	depth = depth + 1;
 	for (usz i = 0; i < node.children.size; i++) {
 		XmlNode* child = node.children[i];
-		print_node(stream, child, depth, i, node.children.size);
+		child.print_as_tree(stream, depth, i, node.children.size);
 	}
 }
