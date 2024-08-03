@@ -5,7 +5,7 @@ import env::xml;
 fn void main(String[] args)
 {
 	File xmlFile = io::file::open("test/test.xml", "r")!!;
-	File outFile = io::file::open("test/out.txt", "w")!!;
+	defer xmlFile.close()!!;
 
 	XmlDoc* doc = xml::read_file(xmlFile)!!;
 	defer doc.free();
@@ -24,6 +24,9 @@ fn void main(String[] args)
 		}
 		io::printf("Id %s\n", id);
 	}
+
+	File outFile = io::file::open("test/out.txt", "w")!!;
+	defer outFile.close()!!;
 
 	OutStream stream = (OutStream)&outFile;
 	doc.print_as_tree(stream);
