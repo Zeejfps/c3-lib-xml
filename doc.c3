@@ -2,12 +2,10 @@ module xml;
 import std::io;
 import std::collections;
 
-def XmlAttributeList = List(<XmlAttribute*>);
-def XmlNodeList = List(<XmlNode*>);
+alias XmlAttributeList = List {XmlAttribute*};
+alias XmlNodeList = List{XmlNode*};
 
-fault XmlFault {
-	ATTRIBUTE_NOT_FOUND
-}
+faultdef ATTRIBUTE_NOT_FOUND;
 
 struct XmlAttribute {
 	String name;
@@ -28,7 +26,7 @@ struct XmlDoc {
 	XmlNode* rootNode;
 }
 
-fn XmlDoc*! read_file(File file, Allocator allocator = allocator::heap()) {
+fn XmlDoc*? read_file(File file, Allocator allocator = allocator::heap()) {
 	char[] buff = allocator::new_array(allocator, char, 2048);
 	defer allocator::free(allocator, buff);
 
@@ -39,7 +37,7 @@ fn XmlDoc*! read_file(File file, Allocator allocator = allocator::heap()) {
 	defer reader.free();
 
 	while (!file.eof()) {
-		usz! bytesRead = file.read(buff);
+		usz? bytesRead = file.read(buff);
 		if (catch f = bytesRead) {
 			return f?;
 		}
@@ -105,14 +103,14 @@ fn void XmlNode.find_nodes_by_tag_name(&self, char[] type, XmlNodeList* cache) {
 	}
 }
 
-fn char[]! XmlNode.get_attrib_value(&self, char[] name) {
+fn char[]? XmlNode.get_attrib_value(&self, char[] name) {
 	for (usz i = 0; i < self.attributes.size; i++) {
 		XmlAttribute* attribute = self.attributes[i];
 		if (attribute.name == name) {
 			return attribute.value;
 		}
 	}
-	return XmlFault.ATTRIBUTE_NOT_FOUND?;
+	return ATTRIBUTE_NOT_FOUND?;
 }
 
 fn void XmlDoc.print_as_tree(&doc, OutStream stream) {
@@ -133,7 +131,7 @@ fn void XmlNode.print_as_tree(&node, OutStream stream, int depth, usz childIndex
 		}
 	}
 
-	io::fprintf(stream, "%s", node.name, node.attributes.size)!!;
+	io::fprintf(stream, "%s attributes: %d", node.name, node.attributes.size)!!;
 	for (usz i = 0; i < node.attributes.size; i++) {
 		XmlAttribute* attribute = node.attributes[i];
 		io::fprintf(stream, ", %s=\"%s\"", attribute.name, attribute.value)!!;

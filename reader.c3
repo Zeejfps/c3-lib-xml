@@ -5,7 +5,7 @@ import std::io;
 
 const char[] TEXT_NODE_NAME = "#text";
 
-distinct XmlReader = void;
+typedef XmlReader = void;
 
 enum ReaderState @local {
 	BEGIN_READ_TAG,
@@ -83,10 +83,10 @@ fn void XmlReader.read(&this, char[] slice) {
 
 // Private Section
 
-fn char! XmlReaderImpl.readChar(&self, char[] slice) @local {
+fn char? XmlReaderImpl.readChar(&self, char[] slice) @local {
 	usz readHead = self.readHead;
 	if (readHead >= slice.len){
-		return IoError.EOF?;
+		return io::EOF?;
 	}
 	char c = slice[readHead];
 	self.readHead = readHead + 1;
@@ -245,7 +245,7 @@ fn void XmlReaderImpl.read_text_node(&self, char c) @local {
 	if (c == '<') {
 		if (self.writeHead > 0) {
 			XmlNode* textNode = self.create_node();
-			textNode.name = string::new_format("%s", TEXT_NODE_NAME, self.allocator);
+			textNode.name = string::format(textNode.allocator, "%s", TEXT_NODE_NAME);
 			textNode.value = self.copy_write_buffer();
 			XmlNode* nodeBeingParsed = self.peek_node();
 			nodeBeingParsed.children.push(textNode);
