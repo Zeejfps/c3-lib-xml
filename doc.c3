@@ -1,4 +1,5 @@
 module xml;
+import std::core::mem;
 import std::io;
 import std::collections;
 
@@ -26,7 +27,7 @@ struct XmlDoc {
 	XmlNode* rootNode;
 }
 
-fn XmlDoc*? read_file(File file, Allocator allocator = allocator::heap()) {
+fn XmlDoc*? read_file(File file, Allocator allocator = allocator::mem) {
 	char[] buff = allocator::new_array(allocator, char, 2048);
 	defer allocator::free(allocator, buff);
 
