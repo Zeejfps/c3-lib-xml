@@ -16,7 +16,7 @@ doc.find_nodes_by_tag_name("book", &bookNodes);
 io::printf("book nodes %d\n", bookNodes.size);
 
 foreach (node : bookNodes) {
-    char[]! id = node.get_attrib_value("id");
+    char[]? id = node.get_attrib_value("id");
     if (catch err = id) {
         io::printf("attribute not found\n");
         continue;
